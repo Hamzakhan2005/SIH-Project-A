@@ -39,7 +39,7 @@ const Navbar = () => {
         <div>
           <Stack direction="row" spacing={2}>
             <Button variant="contained" color="success">
-              Success
+              Sign In
             </Button>
           </Stack>
         </div>
