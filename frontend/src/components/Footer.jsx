@@ -92,24 +92,22 @@ export default function Footer() {
 
         <div>
           <h3 className="text-white font-semibold mb-3">Download app</h3>
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-3 ">
             <img
               src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg"
               alt="Google Play"
-              className="h-10 w-auto"
+              className="h-[5vh] w-auto"
             />
             <img
               src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg"
               alt="App Store"
-              className="h-10 w-auto"
+              className="h-[5vh] w-auto"
             />
           </div>
         </div>
       </div>
 
-      <div className="border-t border-gray-800 mt-8 py-4 text-center text-sm text-gray-500">
-        Copyright ©2025 Elysium Designs. All rights reserved
-      </div>
+      <div className="">Copyright ©2025</div>
     </footer>
   );
 }

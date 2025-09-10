@@ -6,9 +6,9 @@ import SignIn from "./components/SignIn";
 function App() {
   return (
     <>
-      <SignIn />
+      {/* <SignIn /> */}
       {/* <Navbar /> */}
-      {/* <HomePage /> */}
+      <HomePage />
       {/* <FindBus /> */}
     </>
   );

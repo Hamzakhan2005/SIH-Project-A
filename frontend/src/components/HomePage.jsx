@@ -3,6 +3,7 @@ import Navbar from "./Navbar";
 import { Button } from "@mui/material";
 import StarIcon from "@mui/icons-material/Star";
 import Footer from "./Footer";
+import styled from "styled-components";
 
 const HomePage = () => {
   return (
@@ -11,8 +12,7 @@ const HomePage = () => {
       <div
         className="pt-[1vh]  bg-gradient-to-b from-purple-100 to-white px-8 py-16 font-sans "
         style={{
-          background:
-            "linear-gradient(180deg, #d6ccff 0%, #f3f0ff 55%, #ffffff 100%)",
+          background: " linear-gradient(135deg, #ffffff 0%, #f7f9fc 100%)",
         }}
       >
         <div className="flex justify-center">
@@ -48,22 +48,6 @@ const HomePage = () => {
           >
             Get Started
           </Button>
-          <div className="flex items-center gap-2 text-gray-300">
-            <div className="flex -space-x-2">
-              {[...Array(4)].map((_, i) => (
-                <img
-                  key={i}
-                  src={`https://via.placeholder.com/32`}
-                  alt="avatar"
-                  className="w-8 h-8 rounded-full border-2 border-black"
-                />
-              ))}
-            </div>
-            <div className="flex items-center gap-1">
-              <StarIcon sx={{ color: "#facc15" }} />
-              <span className="text-sm">Trusted by 1000+ clients</span>
-            </div>
-          </div>
         </div>
 
         <div className="mt-16 text-center ">
@@ -104,49 +88,50 @@ const HomePage = () => {
             making public transport reliable, safe, and accessible for everyone.
           </p>
         </div>
-
-        <div className="mt-16 grid grid-cols-4 gap-10 text-left max-w-6xl mx-auto">
-          {[
-            {
-              title: "Live GPS Tracking",
-              desc: "Track buses and metros in real time.",
-            },
-            {
-              title: "Smart Schedulers",
-              desc: "Always updated with city timings.",
-            },
-            {
-              title: "Multilingual",
-              desc: "Easy access in your local language.",
-            },
-            {
-              title: "Seat Availability",
-              desc: "Know crowd levels before you board.",
-            },
-            {
-              title: "QR Instant Info",
-              desc: "Scan at stops for live route info.",
-            },
-            {
-              title: "AI Prediction",
-              desc: "Smarter ETAs with real-time city data.",
-            },
-            {
-              title: "Smart Alerts",
-              desc: "Get delay and route change updates instantly.",
-            },
-            {
-              title: "Safety First",
-              desc: "Travel securely with verified systems.",
-            },
-          ].map((item, i) => (
-            <div key={i} className="flex flex-col gap-2">
-              <div className="w-8 h-8 rounded-full bg-gray-800"></div>
-              <h3 className="font-semibold text-lg">{item.title}</h3>
-              <p className="text-gray-400 text-sm">{item.desc}</p>
-            </div>
-          ))}
+        <div className="w-[85vw] h-[35vh] px-[2vw] py-[2vh] flex items-center justify-center">
+          <div className="grid grid-cols-4 divide-x divide-y divide-gray-600 ">
+            {[
+              {
+                title: "Live GPS Tracking",
+                desc: "Track buses and metros in real time.",
+              },
+              {
+                title: "Smart Schedulers",
+                desc: "Always updated with city timings.",
+              },
+              {
+                title: "Multilingual",
+                desc: "Easy access in your local language.",
+              },
+              {
+                title: "Seat Availability",
+                desc: "Know crowd levels before you board.",
+              },
+              {
+                title: "QR Instant Info",
+                desc: "Scan at stops for live route info.",
+              },
+              {
+                title: "AI Prediction",
+                desc: "Smarter ETAs with real-time city data.",
+              },
+              {
+                title: "Smart Alerts",
+                desc: "Get delay and route change updates instantly.",
+              },
+              {
+                title: "Safety First",
+                desc: "Travel securely with verified systems.",
+              },
+            ].map((item, i) => (
+              <div key={i} className="flex flex-col p-[0.5rem]">
+                <h3 className="">{item.title}</h3>
+                <p className="">{item.desc}</p>
+              </div>
+            ))}
+          </div>
         </div>
+
         <Footer />
       </div>
     </div>

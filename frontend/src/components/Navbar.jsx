@@ -18,7 +18,13 @@ const BootstrapTooltip = styled(({ className, ...props }) => (
 const Navbar = () => {
   return (
     <>
-      <div className="p-[2vh] flex h-[5vh] items-center">
+      <div
+        className="p-[2vh] flex h-[5vh] items-center"
+        style={{
+          background:
+            "linear-gradient(to right, green 0%, white 50%, orange 100%)",
+        }}
+      >
         <div className="w-[25%] flex justify-center">
           <h2>Project-A</h2>
         </div>
