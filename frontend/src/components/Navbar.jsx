@@ -20,7 +20,7 @@ const Navbar = () => {
   return (
     <>
       <div
-        className="p-[2vh] flex h-[5vh] items-center"
+        className="p-[2vh] flex h-[8vh] items-center"
         style={{
           background:
             "linear-gradient(to right, green 0%, white 50%, orange 100%)",
@@ -37,16 +37,28 @@ const Navbar = () => {
           </StyledWrapper>
         </div>
         <div className="w-[50%] flex justify-center">
-          <BootstrapTooltip title="Features">
+          <BootstrapTooltip
+            title="Features"
+            style={{ color: "black", fontSize: "1.4rem" }}
+          >
             <Button className="text-[2rem]">Features</Button>
           </BootstrapTooltip>
-          <BootstrapTooltip title="Benefits">
+          <BootstrapTooltip
+            title="Benefits"
+            style={{ color: "black", fontSize: "1.4rem" }}
+          >
             <Button>Benefits</Button>
           </BootstrapTooltip>
-          <BootstrapTooltip title="Services">
+          <BootstrapTooltip
+            title="Services"
+            style={{ color: "black", fontSize: "1.3rem" }}
+          >
             <Button>Services</Button>
           </BootstrapTooltip>
-          <BootstrapTooltip title="FAQs">
+          <BootstrapTooltip
+            title="FAQs"
+            style={{ color: "black", fontSize: "1.3rem" }}
+          >
             <Button>FAQs</Button>
           </BootstrapTooltip>
         </div>
