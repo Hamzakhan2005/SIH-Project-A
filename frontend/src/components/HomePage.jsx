@@ -1,11 +1,12 @@
 import React from "react";
 import Navbar from "./Navbar";
-import { Button } from "@mui/material";
-import StarIcon from "@mui/icons-material/Star";
+import { useNavigate } from "react-router-dom";
 import Footer from "./Footer";
 import styled from "styled-components";
 
 const HomePage = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="bg-[#fff] ">
       <Navbar />
@@ -31,7 +32,7 @@ const HomePage = () => {
           </div>
           <div className="flex items-center justify-center">
             <StyledWrapper className="m-[1rem]">
-              <button className="cta">
+              <button className="cta" onClick={() => navigate("/findbus")}>
                 <span className="span">Check Rides</span>
                 <span className="second">
                   <svg

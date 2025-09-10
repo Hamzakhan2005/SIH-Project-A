@@ -1,6 +1,6 @@
 import React from "react";
-import SearchIcon from "@mui/icons-material/Search";
-// import { styled, alpha } from "@mui/material/styles";
+import Footer from "./Footer";
+import Navbar from "./Navbar";
 import InputBase from "@mui/material/InputBase";
 import Button from "@mui/material/Button";
 import styled from "styled-components";
@@ -48,105 +48,109 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
 
 const FindBus = () => {
   return (
-    <div
-      className="w-[98vw] h-[150vh] px-[1vh] py-[1vw] flex flex-col  items-center"
-      style={{
-        background:
-          "linear-gradient(to right,rgb(187, 244, 203) 0%, #ffffff 50%,rgb(248, 219, 186) 100%)",
-      }}
-    >
-      <div className="flex items-center justify-center">
-        <StyledWrapper className="mr-[2vw]">
-          <div className="input-container">
-            <input
-              type="text"
-              name="text"
-              className="input"
-              placeholder="search..."
-            />
-            <span className="icon">
-              <svg
-                width="19px"
-                height="19px"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <g id="SVGRepo_bgCarrier" strokeWidth={0} />
-                <g
-                  id="SVGRepo_tracerCarrier"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <g id="SVGRepo_iconCarrier">
-                  {" "}
-                  <path
-                    opacity={1}
-                    d="M14 5H20"
-                    stroke="#000"
-                    strokeWidth="1.5"
+    <div>
+      <Navbar />
+      <div
+        className="w-[98vw] h-[150vh] px-[1vh] py-[1vw] flex flex-col  items-center"
+        style={{
+          background:
+            "linear-gradient(to right,rgb(187, 244, 203) 0%, #ffffff 50%,rgb(248, 219, 186) 100%)",
+        }}
+      >
+        <div className="flex items-center justify-center">
+          <StyledWrapper className="mr-[2vw]">
+            <div className="input-container">
+              <input
+                type="text"
+                name="text"
+                className="input"
+                placeholder="search..."
+              />
+              <span className="icon">
+                <svg
+                  width="19px"
+                  height="19px"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <g id="SVGRepo_bgCarrier" strokeWidth={0} />
+                  <g
+                    id="SVGRepo_tracerCarrier"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                  />{" "}
-                  <path
-                    opacity={1}
-                    d="M14 8H17"
-                    stroke="#000"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />{" "}
-                  <path
-                    d="M21 11.5C21 16.75 16.75 21 11.5 21C6.25 21 2 16.75 2 11.5C2 6.25 6.25 2 11.5 2"
-                    stroke="#000"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />{" "}
-                  <path
-                    opacity={1}
-                    d="M22 22L20 20"
-                    stroke="#000"
-                    strokeWidth="3.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />{" "}
-                </g>
-              </svg>
-            </span>
-          </div>
-        </StyledWrapper>
-
-        <Button variant="contained">
-          <LocationOnIcon /> Location
-        </Button>
-      </div>
-      <div className="w-[80%] flex items-center justify-between">
-        <div className="flex flex-col items-center justify-center">
-          <h1>Nearest Bus Stop</h1>
-          <p>See all Stops</p>
-
-          <div className="w-[30vw] bg-[#000] h-[45vh] "></div>
-          <StyledWrapper className="h-5vh] w-[20vw]">
-            <div className="card">
-              <p className="card-title">Tips</p>
-              <p className="small-desc">
-                Lorem ipsum dolor sit amet, consectetur adipisicing elit.
-                Quaerat veritatis nobis saepe itaque rerum nostrum aliquid
-                obcaecati odio officia deleniti.
-              </p>
-              <div className="go-corner">
-                <div className="go-arrow">→</div>
-              </div>
+                  />
+                  <g id="SVGRepo_iconCarrier">
+                    {" "}
+                    <path
+                      opacity={1}
+                      d="M14 5H20"
+                      stroke="#000"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />{" "}
+                    <path
+                      opacity={1}
+                      d="M14 8H17"
+                      stroke="#000"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />{" "}
+                    <path
+                      d="M21 11.5C21 16.75 16.75 21 11.5 21C6.25 21 2 16.75 2 11.5C2 6.25 6.25 2 11.5 2"
+                      stroke="#000"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />{" "}
+                    <path
+                      opacity={1}
+                      d="M22 22L20 20"
+                      stroke="#000"
+                      strokeWidth="3.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />{" "}
+                  </g>
+                </svg>
+              </span>
             </div>
           </StyledWrapper>
+
+          <Button variant="contained">
+            <LocationOnIcon /> Location
+          </Button>
         </div>
-        <div className="pt-[25vh] flex flex-col items-center justify-center">
-          <h1>Buses Around You</h1>
-          <p>Open the map</p>
-          <div className="w-[30vw] h-[45vh] bg-[#000] h-[35vh] "></div>
+        <div className="w-[80%] flex items-center justify-between">
+          <div className="flex flex-col items-center justify-center">
+            <h1>Nearest Bus Stop</h1>
+            <p>See all Stops</p>
+
+            <div className="w-[30vw] bg-[#000] h-[45vh] "></div>
+            <StyledWrapper className="h-5vh] w-[20vw]">
+              <div className="card">
+                <p className="card-title">Tips</p>
+                <p className="small-desc">
+                  Lorem ipsum dolor sit amet, consectetur adipisicing elit.
+                  Quaerat veritatis nobis saepe itaque rerum nostrum aliquid
+                  obcaecati odio officia deleniti.
+                </p>
+                <div className="go-corner">
+                  <div className="go-arrow">→</div>
+                </div>
+              </div>
+            </StyledWrapper>
+          </div>
+          <div className="pt-[25vh] flex flex-col items-center justify-center">
+            <h1>Buses Around You</h1>
+            <p>Open the map</p>
+            <div className="w-[30vw] h-[45vh] bg-[#000] h-[35vh] "></div>
+          </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 };

@@ -1,5 +1,7 @@
 import React from "react";
 import { styled as muiStyled } from "@mui/material/styles";
+import { useNavigate } from "react-router-dom";
+
 import Button from "@mui/material/Button";
 import Tooltip, { tooltipClasses } from "@mui/material/Tooltip";
 import Stack from "@mui/material/Stack";
@@ -17,6 +19,7 @@ const BootstrapTooltip = muiStyled(({ className, ...props }) => (
 }));
 
 const Navbar = () => {
+  const navigate = useNavigate();
   return (
     <>
       <div
@@ -28,7 +31,11 @@ const Navbar = () => {
       >
         <div className="w-[25%] flex justify-center">
           <StyledWrapper>
-            <button className="button" data-text="Awesome">
+            <button
+              className="button"
+              data-text="Awesome"
+              onClick={() => navigate("/")}
+            >
               <span className="actual-text">&nbsp;GoLocal&nbsp;</span>
               <span aria-hidden="true" className="hover-text">
                 &nbsp;GoLocal&nbsp;
@@ -64,7 +71,11 @@ const Navbar = () => {
         </div>
         <div className="w-[25%] flex items-center justify-center">
           <Stack direction="row" spacing={2}>
-            <Button variant="contained" color="success">
+            <Button
+              variant="contained"
+              color="success"
+              onClick={() => navigate("/signin")}
+            >
               Sign In
             </Button>
           </Stack>
