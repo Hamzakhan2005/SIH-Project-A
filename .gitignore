@@ -1,0 +1,14 @@
+# dependencies
+node_modules/
+
+# build outputs
+dist/
+build/
+.next/
+.vite/
+
+# logs
+*.log
+
+# misc
+.DS_Store
