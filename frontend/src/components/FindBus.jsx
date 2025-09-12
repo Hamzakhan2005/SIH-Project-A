@@ -1,186 +1,278 @@
+// FindBus.jsx (replace your current FindBus file)
 import React from "react";
 import Footer from "./Footer";
 import Navbar from "./Navbar";
-import InputBase from "@mui/material/InputBase";
 import Button from "@mui/material/Button";
 import styled from "styled-components";
 import api from "../api.js";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import MapView from "./MapView";
 
-const Search = styled("div")(({ theme }) => ({
-  position: "relative",
-  borderRadius: theme.shape.borderRadius,
-  backgroundColor: alpha(theme.palette.common.white, 0.15),
-  "&:hover": {
-    backgroundColor: alpha(theme.palette.common.white, 0.25),
-  },
-  marginRight: theme.spacing(2),
-  marginLeft: 0,
-  width: "100%",
-  [theme.breakpoints.up("sm")]: {
-    marginLeft: theme.spacing(3),
-    width: "auto",
-  },
-}));
-
-const SearchIconWrapper = styled("div")(({ theme }) => ({
-  padding: theme.spacing(0, 2),
-  height: "100%",
-  position: "absolute",
-  pointerEvents: "none",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-}));
-
-const StyledInputBase = styled(InputBase)(({ theme }) => ({
-  color: "inherit",
-  "& .MuiInputBase-input": {
-    padding: theme.spacing(1, 1, 1, 0),
-    // vertical padding + font size from searchIcon
-    paddingLeft: `calc(1em + ${theme.spacing(4)})`,
-    transition: theme.transitions.create("width"),
-    width: "100%",
-    [theme.breakpoints.up("md")]: {
-      width: "20ch",
-    },
-  },
-}));
-
 const FindBus = () => {
-  const [userLocation, setUserLocation] = React.useState(null);
-  const mapRef = useRef(null);
+  const [stops, setStops] = useState([]);
+  const [buses, setBuses] = useState([]);
+  const [userLocation, setUserLocation] = useState(null);
+  const [nearestStop, setNearestStop] = useState(null);
+  const [walkingInfo, setWalkingInfo] = useState(null); // {distance_km, walking_minutes, path}
+  const [arrivals, setArrivals] = useState([]); // arrivals at nearest stop in next 30 min
+  const [loadingArrivals, setLoadingArrivals] = useState(false);
 
+  // Fetch stops once
+  useEffect(() => {
+    (async () => {
+      try {
+        const stopRes = await api.get("/bus-stops");
+        setStops(stopRes.data || []);
+      } catch (err) {
+        console.error("Error fetching stops:", err);
+      }
+    })();
+  }, []);
+
+  // Fetch all buses initially and then poll every 6 seconds
+  useEffect(() => {
+    let mounted = true;
+    const fetchBuses = async () => {
+      try {
+        const busRes = await api.get("/all-buses");
+        if (!mounted) return;
+        // normalize to route_coords: map stop IDs to stop lat/lng
+        const busesWithCoords = (busRes.data || []).map((bus) => {
+          const route_coords = (bus.route_stops || [])
+            .map((stopId) => stops.find((s) => s.id === stopId))
+            .filter(Boolean)
+            .map((s) => [s.lat, s.lng]);
+          return {
+            ...bus,
+            route_coords,
+            current_lat: bus.current_lat,
+            current_lng: bus.current_lng,
+          };
+        });
+        setBuses(busesWithCoords);
+      } catch (err) {
+        console.error("Error fetching buses:", err);
+      }
+    };
+
+    fetchBuses();
+    const interval = setInterval(fetchBuses, 6000);
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
+  }, [stops]);
+
+  // locate user and set nearest stop when location known
   const handleLocate = () => {
-    if (!navigator.geolocation) {
-      alert("Geolocation not supported by your browser");
-      return;
-    }
-
+    if (!navigator.geolocation) return alert("Geolocation not supported");
     navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        console.log("User location:", latitude, longitude);
-
-        // update state so MapView shows marker
-        setUserLocation({ lat: latitude, lng: longitude });
-
-        // Center the map if it exists
-        if (mapRef.current) {
-          mapRef.current.setView([latitude, longitude], 15);
-        }
+      async (pos) => {
+        const user = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        setUserLocation(user);
       },
-      (error) => {
-        console.error("Geolocation error:", error);
-        alert("Failed to get location: " + error.message);
-      },
+      (err) => alert("Error getting location: " + err.message),
       { enableHighAccuracy: true }
     );
   };
+
+  // compute nearest stop when userLocation or stops change
+  useEffect(() => {
+    if (!userLocation || stops.length === 0) {
+      setNearestStop(null);
+      setArrivals([]);
+      setWalkingInfo(null);
+      return;
+    }
+
+    // simple haversine
+    const haversine = (lat1, lon1, lat2, lon2) => {
+      const R = 6371;
+      const toRad = (d) => (d * Math.PI) / 180;
+      const dLat = toRad(lat2 - lat1);
+      const dLon = toRad(lon2 - lon1);
+      const a =
+        Math.sin(dLat / 2) ** 2 +
+        Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c;
+    };
+
+    let nearest = null;
+    let minDist = Infinity;
+    stops.forEach((s) => {
+      const d = haversine(userLocation.lat, userLocation.lng, s.lat, s.lng);
+      if (d < minDist) {
+        minDist = d;
+        nearest = s;
+      }
+    });
+
+    setNearestStop(nearest);
+    // walking speed 5 km/h to compute walking minutes
+    const walking_minutes = (minDist / 5) * 60;
+    setWalkingInfo({
+      distance_km: Number(minDist.toFixed(3)),
+      walking_minutes: Number(walking_minutes.toFixed(1)),
+    });
+
+    // fetch walking path (MapView already also computes, but fetching here so UI can show ETA quickly)
+    (async () => {
+      try {
+        const pathRes = await fetch(
+          `/api_dummy_walking?start_lat=${userLocation.lat}&start_lng=${userLocation.lng}&end_lat=${nearest.lat}&end_lng=${nearest.lng}`
+        );
+        // NOTE: we will let MapView compute actual OSRM path; this is placeholder
+      } catch (e) {
+        // non-fatal
+      }
+    })();
+
+    // fetch arrivals for nearest stop
+    (async () => {
+      if (!nearest) return;
+      setLoadingArrivals(true);
+      try {
+        // call backend endpoint we discussed
+        const res = await api.get(
+          `/stop-schedule/${nearest.id}?window_minutes=30&user_lat=${userLocation.lat}&user_lng=${userLocation.lng}`
+        );
+        // expected: { stop_id: ..., arrivals: [...] }
+        setArrivals(res.data.arrivals || []);
+      } catch (err) {
+        console.error("Error fetching arrivals:", err);
+        setArrivals([]);
+      } finally {
+        setLoadingArrivals(false);
+      }
+    })();
+  }, [userLocation, stops]);
 
   return (
     <div>
       <Navbar />
       <div
-        className="w-[98vw] h-[150vh] px-[1vh] py-[1vw] flex flex-col  items-center"
         style={{
+          width: "98vw",
+          height: "150vh",
+          padding: "1vh 1vw",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
           background:
-            "linear-gradient(to right,rgb(187, 244, 203) 0%, #ffffff 50%,rgb(248, 219, 186) 100%)",
+            "linear-gradient(to right, #bbe4cb 0%, #ffffff 50%, #f8dbba 100%)",
         }}
       >
-        <div className="flex items-center justify-center">
-          <StyledWrapper className="mr-[2vw]">
-            <div className="input-container">
-              <input
-                type="text"
-                name="text"
-                className="input"
-                placeholder="search..."
-              />
-              <span className="icon">
-                <svg
-                  width="19px"
-                  height="19px"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <g id="SVGRepo_bgCarrier" strokeWidth={0} />
-                  <g
-                    id="SVGRepo_tracerCarrier"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <g id="SVGRepo_iconCarrier">
-                    {" "}
-                    <path
-                      opacity={1}
-                      d="M14 5H20"
-                      stroke="#000"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />{" "}
-                    <path
-                      opacity={1}
-                      d="M14 8H17"
-                      stroke="#000"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />{" "}
-                    <path
-                      d="M21 11.5C21 16.75 16.75 21 11.5 21C6.25 21 2 16.75 2 11.5C2 6.25 6.25 2 11.5 2"
-                      stroke="#000"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />{" "}
-                    <path
-                      opacity={1}
-                      d="M22 22L20 20"
-                      stroke="#000"
-                      strokeWidth="3.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />{" "}
-                  </g>
-                </svg>
-              </span>
-            </div>
-          </StyledWrapper>
-
+        <div
+          className="flex items-center justify-center"
+          style={{ marginBottom: 12 }}
+        >
+          <div style={{ marginRight: 12 }}>
+            <input
+              placeholder="search..."
+              style={{ padding: 10, width: 220 }}
+            />
+          </div>
           <Button variant="contained" onClick={handleLocate}>
             <LocationOnIcon /> Location
           </Button>
         </div>
-        <div className="w-[80%] flex items-center justify-between">
-          <div className="flex flex-col items-center justify-center">
-            <h1>Nearest Bus Stop</h1>
-            <p>See all Stops</p>
 
-            <div className="w-[30vw] bg-[#000] h-[45vh] "></div>
-            <StyledWrapper className="h-5vh] w-[20vw]">
-              <div className="card">
-                <p className="card-title">Tips</p>
-                <p className="small-desc">
-                  Lorem ipsum dolor sit amet, consectetur adipisicing elit.
-                  Quaerat veritatis nobis saepe itaque rerum nostrum aliquid
-                  obcaecati odio officia deleniti.
-                </p>
-                <div className="go-corner">
-                  <div className="go-arrow">→</div>
-                </div>
-              </div>
-            </StyledWrapper>
+        <div
+          style={{
+            width: "80%",
+            display: "flex",
+            justifyContent: "space-between",
+            marginTop: "2vh",
+          }}
+        >
+          <div
+            style={{
+              width: "30%",
+              display: "flex",
+              flexDirection: "column",
+              gap: 12,
+            }}
+          >
+            <div
+              style={{
+                background: "#fff",
+                padding: 12,
+                borderRadius: 10,
+                boxShadow: "0 1px 6px rgba(0,0,0,0.1)",
+              }}
+            >
+              <h2>Nearest Bus Stop</h2>
+              {nearestStop ? (
+                <>
+                  <p style={{ margin: 0, fontWeight: 600 }}>
+                    {nearestStop.name}
+                  </p>
+                  <p style={{ margin: 0 }}>
+                    Distance: {walkingInfo?.distance_km} km
+                  </p>
+                  <p style={{ margin: 0 }}>
+                    Walking ETA: {walkingInfo?.walking_minutes} min
+                  </p>
+                </>
+              ) : (
+                <p>Click Location to find nearest stop</p>
+              )}
+            </div>
+
+            <div
+              style={{
+                background: "#fff",
+                padding: 12,
+                borderRadius: 10,
+                height: "45vh",
+                overflow: "auto",
+              }}
+            >
+              <h3>Arrivals </h3>
+              {loadingArrivals ? <p>Loading...</p> : null}
+              {!loadingArrivals && arrivals.length === 0 && <p>No arrivals </p>}
+              <ul style={{ paddingLeft: 16 }}>
+                {arrivals.map((a, idx) => (
+                  <li key={idx} style={{ marginBottom: 8 }}>
+                    <div>
+                      <strong>Bus #{a.bus_id}</strong> (Route {a.route_id})
+                    </div>
+                    <div>
+                      Scheduled: {a.scheduled_time} • ETA: {a.eta_minutes} min •
+                      Fare: ₹{a.fare_inr}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
-          <div className="pt-[25vh] flex flex-col items-center justify-center">
+
+          <div
+            style={{
+              width: "65%",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
+          >
             <h1>Buses Around You</h1>
-            <p>Open the map</p>
-            <div className="w-[30vw] h-[45vh]">
-              <MapView userLocation={userLocation} mapRef={mapRef} />
+            <div
+              style={{
+                width: "100%",
+                height: "55vh",
+                borderRadius: 10,
+                overflow: "hidden",
+              }}
+            >
+              <MapView
+                userLocation={userLocation}
+                stops={stops}
+                buses={buses}
+                nearestStop={nearestStop}
+                walkingInfo={walkingInfo}
+              />
             </div>
           </div>
         </div>
@@ -189,135 +281,5 @@ const FindBus = () => {
     </div>
   );
 };
-
-const StyledWrapper = styled.div`
-  .input-container {
-    width: 220px;
-    position: relative;
-  }
-
-  .icon {
-    position: absolute;
-    right: 10px;
-    top: calc(50% + 5px);
-    transform: translateY(calc(-50% - 5px));
-  }
-
-  .input {
-    width: 100%;
-    height: 40px;
-    padding: 10px;
-    transition: 0.2s linear;
-    border: 2.5px solid black;
-    font-size: 14px;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-  }
-
-  .input:focus {
-    outline: none;
-    border: 0.5px solid black;
-    box-shadow: -5px -5px 0px black;
-  }
-
-  .input-container:hover > .icon {
-    animation: anim 1s linear infinite;
-  }
-
-  @keyframes anim {
-    0%,
-    100% {
-      transform: translateY(calc(-50% - 5px)) scale(1);
-    }
-
-    50% {
-      transform: translateY(calc(-50% - 5px)) scale(1.1);
-    }
-  }
-  .card-title {
-    color: #262626;
-    font-size: 1.5em;
-    line-height: normal;
-    font-weight: 700;
-    margin-bottom: 0.5em;
-  }
-
-  .small-desc {
-    font-size: 1em;
-    font-weight: 400;
-    line-height: 1.5em;
-    color: #452c2c;
-  }
-
-  .small-desc {
-    font-size: 1em;
-  }
-
-  .go-corner {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: absolute;
-    width: 2em;
-    height: 2em;
-    overflow: hidden;
-    top: 0;
-    right: 0;
-    background: linear-gradient(135deg, #6293c8, #384c6c);
-    border-radius: 0 4px 0 32px;
-  }
-
-  .go-arrow {
-    margin-top: -4px;
-    margin-right: -4px;
-    color: white;
-    font-family: courier, sans;
-  }
-
-  .card {
-    display: block;
-    position: relative;
-    max-width: 300px;
-    max-height: 320px;
-    background-color: #f2f8f9;
-    border-radius: 10px;
-    padding: 2em 1.2em;
-    margin: 12px;
-    text-decoration: none;
-    z-index: 0;
-    overflow: hidden;
-    background: linear-gradient(to bottom, #c3e6ec, #a7d1d9);
-    font-family: Arial, Helvetica, sans-serif;
-  }
-
-  .card:before {
-    content: "";
-    position: absolute;
-    z-index: -1;
-    top: -16px;
-    right: -16px;
-    background: linear-gradient(135deg, #364a60, #384c6c);
-    height: 32px;
-    width: 32px;
-    border-radius: 32px;
-    transform: scale(1);
-    transform-origin: 50% 50%;
-    transition: transform 0.35s ease-out;
-  }
-
-  .card:hover:before {
-    transform: scale(28);
-  }
-
-  .card:hover .small-desc {
-    transition: all 0.5s ease-out;
-    color: rgba(255, 255, 255, 0.8);
-  }
-
-  .card:hover .card-title {
-    transition: all 0.5s ease-out;
-    color: #ffffff;
-  }
-`;
 
 export default FindBus;

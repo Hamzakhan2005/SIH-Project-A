@@ -7,6 +7,7 @@ import sqlite3
 from math import radians, sin, cos, sqrt, atan2
 from datetime import datetime, timedelta
 
+
 DB = "db.sqlite"
 app=FastAPI()
 origins = [
@@ -104,6 +105,127 @@ def get_routes():
         routes.append({"id": r[0], "name": r[1], "stops": stops})
     return routes
 
+@app.get("/buses-at-stop/{stop_id}", response_model=List[Bus])
+def buses_at_stop(stop_id: int):
+    # 1. Find all route IDs that include this stop
+    route_rows = db_query("SELECT route_id FROM route_stops WHERE stop_id=?", (stop_id,))
+    if not route_rows:
+        raise HTTPException(404, f"No routes found for stop {stop_id}")
+    route_ids = [r[0] for r in route_rows]
+
+    # 2. Get buses running on those routes
+    buses_rows = db_query(
+        f"SELECT id, route_id, current_lat, current_lng FROM buses WHERE route_id IN ({','.join(['?']*len(route_ids))})",
+        tuple(route_ids)
+    )
+
+    return [Bus(id=r[0], route_id=r[1], current_lat=r[2], current_lng=r[3]) for r in buses_rows]
+
+@app.get("/all-buses")
+def all_buses():
+    """
+    Return all buses with their route_id, current coords and route stop ids.
+    (Kept simple and safe for the frontend mapping code you already have.)
+    """
+    rows = db_query("SELECT id, route_id, current_lat, current_lng FROM buses")
+    # build route -> stops map
+    stops_rows = db_query("SELECT route_id, stop_id FROM route_stops ORDER BY stop_order")
+    route_map = {}
+    for r in stops_rows:
+        route_map.setdefault(r[0], []).append(r[1])
+
+    result = []
+    for r in rows:
+        route_stops = route_map.get(r[1], [])
+        result.append({
+            "id": r[0],
+            "route_id": r[1],
+            "current_lat": r[2],
+            "current_lng": r[3],
+            "route_stops": route_stops
+        })
+    return result
+
+
+
+@app.get("/stop-schedule/{stop_id}")
+def stop_schedule(stop_id: int):
+    """
+    Return ALL buses serving this stop with their ETA (based on road distance).
+    Also include scheduled times from DB.
+    """
+    now = datetime.now()
+    results = []
+
+    # find all routes that pass through this stop
+    route_rows = db_query("SELECT DISTINCT route_id FROM route_stops WHERE stop_id=?", (stop_id,))
+    if not route_rows:
+        return {"stop_id": stop_id, "arrivals": []}
+
+    route_ids = [r[0] for r in route_rows]
+
+    # get stop coordinates
+    stop_row = db_query("SELECT id, lat, lng FROM stops WHERE id=?", (stop_id,))
+    if not stop_row:
+        raise HTTPException(404, "Stop not found")
+    _, stop_lat, stop_lng = stop_row[0]
+
+    for route_id in route_ids:
+        # get buses running this route
+        buses = db_query("SELECT id, current_lat, current_lng FROM buses WHERE route_id=?", (route_id,))
+        for bus in buses:
+            bus_id, bus_lat, bus_lng = bus
+
+            # --- Compute ETA using OSRM ---
+            try:
+                url = f"http://router.project-osrm.org/route/v1/driving/{bus_lng},{bus_lat};{stop_lng},{stop_lat}?overview=false"
+                res = requests.get(url).json()
+                if res.get("routes"):
+                    road_distance_km = res["routes"][0]["distance"] / 1000.0
+                else:
+                    road_distance_km = haversine_km(bus_lat, bus_lng, stop_lat, stop_lng)
+            except Exception:
+                road_distance_km = haversine_km(bus_lat, bus_lng, stop_lat, stop_lng)
+
+            # travel time
+            multiplier = time_of_day_multiplier(now)
+            base_speed_kmph = 25.0
+            effective_speed = base_speed_kmph * multiplier
+            travel_minutes = (road_distance_km / effective_speed) * 60
+
+            eta_time = (now + timedelta(minutes=travel_minutes)).strftime("%H:%M:%S")
+
+            results.append({
+                "bus_id": bus_id,
+                "route_id": route_id,
+                "stop_id": stop_id,
+                "eta_minutes": round(travel_minutes, 2),
+                "eta_time": eta_time,
+                "distance_km": round(road_distance_km, 2),
+                "fare_inr": 10
+            })
+
+        # also include scheduled times (optional, if you want both)
+        sched_rows = db_query("SELECT departure_time FROM schedules WHERE route_id=? ORDER BY departure_time ASC", (route_id,))
+        for (dep_time_str,) in sched_rows:
+            results.append({
+                "bus_id": None,  # schedule only, no live bus
+                "route_id": route_id,
+                "stop_id": stop_id,
+                "scheduled_time": dep_time_str,
+                "eta_minutes": None,
+                "eta_time": None,
+                "distance_km": None,
+                "fare_inr": 10
+            })
+
+    # sort by soonest ETA first
+    results.sort(key=lambda x: x["eta_minutes"] if x["eta_minutes"] is not None else 99999)
+    return {"stop_id": stop_id, "arrivals": results}
+
+
+
+
 @app.get("/buses-near-me", response_model=List[Bus])
 def buses_near_me(lat: float = Query(...), lng: float = Query(...), radius_km: float = 2.0):
     # returns buses whose current position is within radius_km of (lat,lng)
@@ -117,7 +239,6 @@ def buses_near_me(lat: float = Query(...), lng: float = Query(...), radius_km: f
 
 @app.get("/eta-to-user", response_model=ETAResponse)
 def eta_to_user(bus_id: int, user_lat: float, user_lng: float, include_walking: Optional[bool] = True):
-    # 1) get bus current location and route
     r = db_query("SELECT id, route_id, current_lat, current_lng FROM buses WHERE id=?", (bus_id,))
     if not r:
         raise HTTPException(404, "Bus not found")
@@ -125,33 +246,39 @@ def eta_to_user(bus_id: int, user_lat: float, user_lng: float, include_walking: 
     bus_lat, bus_lng = bus[2], bus[3]
     route_id = bus[1]
 
-    # 2) find nearest stop on that route to the user (user_stop)
+    # get nearest stop to user
     stops_on_route = db_query("SELECT s.id, s.name, s.lat, s.lng FROM route_stops rs JOIN stops s ON rs.stop_id=s.id WHERE rs.route_id=? ORDER BY rs.stop_order", (route_id,))
-    # get the stop closest to user (user will walk to that stop)
     user_stop = min(stops_on_route, key=lambda s: haversine_km(user_lat, user_lng, s[2], s[3]))
     user_stop_id, user_stop_lat, user_stop_lng = user_stop[0], user_stop[2], user_stop[3]
 
-    # 3) estimate walking time from user -> user_stop
+    # Walking ETA (haversine is okay here)
     walk_speed_kmph = 5.0
     walk_dist = haversine_km(user_lat, user_lng, user_stop_lat, user_stop_lng)
-    walking_minutes = (walk_dist / walk_speed_kmph) * 60
+    walking_minutes = (walk_dist / walk_speed_kmph) * 60 if include_walking else 0
 
-    # 4) estimate bus travel distance from current bus pos -> user_stop (approx via straight-line)
-    bus_to_stop_km = haversine_km(bus_lat, bus_lng, user_stop_lat, user_stop_lng)
+    # --- Use OSRM Driving for Bus Route ---
+    try:
+        url = f"http://router.project-osrm.org/route/v1/driving/{bus_lng},{bus_lat};{user_stop_lng},{user_stop_lat}?overview=false"
+        res = requests.get(url).json()
+        if res.get("routes"):
+            road_distance_km = res["routes"][0]["distance"] / 1000.0
+        else:
+            road_distance_km = haversine_km(bus_lat, bus_lng, user_stop_lat, user_stop_lng)  # fallback
+    except Exception:
+        road_distance_km = haversine_km(bus_lat, bus_lng, user_stop_lat, user_stop_lng)
 
-    # 5) traffic multiplier based on now
+    # Apply traffic + speed
     now = datetime.now()
     multiplier = time_of_day_multiplier(now)
-    base_speed_kmph = 25.0  # base bus speed
-    effective_speed = base_speed_kmph * multiplier  # slower when multiplier<1
-    travel_minutes = (bus_to_stop_km / effective_speed) * 60
+    base_speed_kmph = 25.0
+    effective_speed = base_speed_kmph * multiplier
+    travel_minutes = (road_distance_km / effective_speed) * 60
 
-    # 6) delay due to traffic: compute difference between travel time with multiplier and without
-    normal_speed = base_speed_kmph
-    normal_minutes = (bus_to_stop_km / normal_speed) * 60
+    # delay compared to normal
+    normal_minutes = (road_distance_km / base_speed_kmph) * 60
     delay_minutes = max(0.0, travel_minutes - normal_minutes)
 
-    total_eta_minutes = travel_minutes + (walking_minutes if include_walking else 0)
+    total_eta_minutes = travel_minutes + walking_minutes
     eta_time = (now + timedelta(minutes=total_eta_minutes)).strftime("%H:%M:%S")
 
     return ETAResponse(
@@ -160,7 +287,7 @@ def eta_to_user(bus_id: int, user_lat: float, user_lng: float, include_walking: 
         eta_minutes=round(total_eta_minutes, 2),
         eta_time=eta_time,
         walking_minutes=round(walking_minutes, 2),
-        distance_km=round(bus_to_stop_km, 3),
+        distance_km=round(road_distance_km, 3),
         delay_minutes_due_to_traffic=round(delay_minutes, 2)
     )
 
