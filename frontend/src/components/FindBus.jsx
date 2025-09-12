@@ -4,6 +4,7 @@ import Navbar from "./Navbar";
 import InputBase from "@mui/material/InputBase";
 import Button from "@mui/material/Button";
 import styled from "styled-components";
+import api from "../api.js";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 
 const Search = styled("div")(({ theme }) => ({
