@@ -9,9 +9,11 @@ from datetime import datetime, timedelta
 
 DB = "db.sqlite"
 app=FastAPI()
-origins=[
-     "http://localhost:5173/"
+origins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173"
 ]
+
 
 # ---------- Pydantic models ----------
 class Stop(BaseModel):

@@ -6,6 +6,8 @@ import Button from "@mui/material/Button";
 import styled from "styled-components";
 import api from "../api.js";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
+import { useRef } from "react";
+import MapView from "./MapView";
 
 const Search = styled("div")(({ theme }) => ({
   position: "relative",
@@ -48,6 +50,36 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
 }));
 
 const FindBus = () => {
+  const [userLocation, setUserLocation] = React.useState(null);
+  const mapRef = useRef(null);
+
+  const handleLocate = () => {
+    if (!navigator.geolocation) {
+      alert("Geolocation not supported by your browser");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        console.log("User location:", latitude, longitude);
+
+        // update state so MapView shows marker
+        setUserLocation({ lat: latitude, lng: longitude });
+
+        // Center the map if it exists
+        if (mapRef.current) {
+          mapRef.current.setView([latitude, longitude], 15);
+        }
+      },
+      (error) => {
+        console.error("Geolocation error:", error);
+        alert("Failed to get location: " + error.message);
+      },
+      { enableHighAccuracy: true }
+    );
+  };
+
   return (
     <div>
       <Navbar />
@@ -120,7 +152,7 @@ const FindBus = () => {
             </div>
           </StyledWrapper>
 
-          <Button variant="contained">
+          <Button variant="contained" onClick={handleLocate}>
             <LocationOnIcon /> Location
           </Button>
         </div>
@@ -147,7 +179,9 @@ const FindBus = () => {
           <div className="pt-[25vh] flex flex-col items-center justify-center">
             <h1>Buses Around You</h1>
             <p>Open the map</p>
-            <div className="w-[30vw] h-[45vh] bg-[#000] h-[35vh] "></div>
+            <div className="w-[30vw] h-[45vh]">
+              <MapView userLocation={userLocation} mapRef={mapRef} />
+            </div>
           </div>
         </div>
       </div>
