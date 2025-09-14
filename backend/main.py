@@ -6,13 +6,24 @@ from typing import List, Optional
 import sqlite3
 from math import radians, sin, cos, sqrt, atan2
 from datetime import datetime, timedelta
-
+import asyncio
+import threading
+import requests   
+import json, time
+live_state = {} 
 
 DB = "db.sqlite"
+conn_bg = sqlite3.connect(DB, check_same_thread=False, timeout=30)
+cur_bg = conn_bg.cursor()
+cur_bg.execute("PRAGMA journal_mode=WAL;")
+
+# lock so only one thread writes at a time
+db_lock = threading.Lock()
 app=FastAPI()
 origins = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173"
+    # "http://localhost:5173",
+    # "http://127.0.0.1:5173"
+    "https://sih-project-a.vercel.app"
 ]
 
 
@@ -72,7 +83,52 @@ def time_of_day_multiplier(dt: datetime):
         return 0.9
     return 1.0
 
+async def move_buses():
+    poll_seconds = 5
+    while True:
+        for bus_id, st in list(live_state.items()):
+            coords = st.get("coords", [])
+            if not coords:
+                continue
 
+            idx = (st["idx"] + 1) % len(coords)
+            next_lat, next_lng = coords[idx]
+            live_state[bus_id].update({"lat": next_lat, "lng": next_lng, "idx": idx})
+
+        await asyncio.sleep(poll_seconds)
+
+@app.on_event("startup")
+def startup_tasks():
+    global live_state
+
+    # Use the same function that builds coords dynamically
+    buses_data = all_buses()
+
+    for bus in buses_data:
+        coords = bus["route_coords"]
+        if not coords:
+            continue
+        live_state[bus["id"]] = {
+            "lat": coords[0][0],
+            "lng": coords[0][1],
+            "idx": 0,
+            "coords": coords
+        }
+
+    # start background simulator
+    def start_loop(loop):
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(move_buses())
+
+    loop = asyncio.new_event_loop()
+    t = threading.Thread(target=start_loop, args=(loop,), daemon=True)
+    t.start()
+
+
+
+def start_background_loop(loop):
+    asyncio.set_event_loop(loop)
+    loop.run_until_complete(move_buses())
 
 
 app.add_middleware(
@@ -93,6 +149,11 @@ def root():
 def get_stops():
     rows = db_query("SELECT id, name, lat, lng FROM stops")
     return [Stop(id=r[0], name=r[1], lat=r[2], lng=r[3]) for r in rows]
+
+@app.get("/live-buses")
+def get_live_buses():
+    return [{"id": bid, "lat": st["lat"], "lng": st["lng"]} for bid, st in live_state.items()]
+
 
 @app.get("/bus-routes")
 def get_routes():
@@ -121,71 +182,68 @@ def buses_at_stop(stop_id: int):
 
     return [Bus(id=r[0], route_id=r[1], current_lat=r[2], current_lng=r[3]) for r in buses_rows]
 
+import requests
+
 @app.get("/all-buses")
 def all_buses():
-    """
-    Return all buses with their route_id, current coords and route stop ids.
-    (Kept simple and safe for the frontend mapping code you already have.)
-    """
     rows = db_query("SELECT id, route_id, current_lat, current_lng FROM buses")
-    # build route -> stops map
-    stops_rows = db_query("SELECT route_id, stop_id FROM route_stops ORDER BY stop_order")
+    stops_rows = db_query("SELECT id, lat, lng FROM stops")
+    route_stops_rows = db_query("SELECT route_id, stop_id FROM route_stops ORDER BY stop_order")
+
+    # Mapping for easy access
+    stop_map = {r[0]: (r[1], r[2]) for r in stops_rows}
     route_map = {}
-    for r in stops_rows:
+    for r in route_stops_rows:
         route_map.setdefault(r[0], []).append(r[1])
 
     result = []
-    for r in rows:
-        route_stops = route_map.get(r[1], [])
+
+    for bus_id, route_id, cur_lat, cur_lng in rows:
+        route_stops = route_map.get(route_id, [])
+
+        # Simple straight-line route coordinates
+        coords = []
+        for stop_id in route_stops:
+            if stop_id in stop_map:
+                coords.append([stop_map[stop_id][0], stop_map[stop_id][1]])
+
         result.append({
-            "id": r[0],
-            "route_id": r[1],
-            "current_lat": r[2],
-            "current_lng": r[3],
-            "route_stops": route_stops
+            "id": bus_id,
+            "route_id": route_id,
+            "current_lat": cur_lat,
+            "current_lng": cur_lng,
+            "route_stops": route_stops,
+            "route_coords": coords
         })
+
     return result
 
 
 
 @app.get("/stop-schedule/{stop_id}")
 def stop_schedule(stop_id: int):
-    """
-    Return ALL buses serving this stop with their ETA (based on road distance).
-    Also include scheduled times from DB.
-    """
     now = datetime.now()
     results = []
 
-    # find all routes that pass through this stop
+    # Routes passing through this stop
     route_rows = db_query("SELECT DISTINCT route_id FROM route_stops WHERE stop_id=?", (stop_id,))
     if not route_rows:
         return {"stop_id": stop_id, "arrivals": []}
 
     route_ids = [r[0] for r in route_rows]
 
-    # get stop coordinates
+    # Stop coordinates
     stop_row = db_query("SELECT id, lat, lng FROM stops WHERE id=?", (stop_id,))
     if not stop_row:
         raise HTTPException(404, "Stop not found")
     _, stop_lat, stop_lng = stop_row[0]
 
     for route_id in route_ids:
-        # get buses running this route
         buses = db_query("SELECT id, current_lat, current_lng FROM buses WHERE route_id=?", (route_id,))
-        for bus in buses:
-            bus_id, bus_lat, bus_lng = bus
+        for bus_id, bus_lat, bus_lng in buses:
 
-            # --- Compute ETA using OSRM ---
-            try:
-                url = f"http://router.project-osrm.org/route/v1/driving/{bus_lng},{bus_lat};{stop_lng},{stop_lat}?overview=false"
-                res = requests.get(url).json()
-                if res.get("routes"):
-                    road_distance_km = res["routes"][0]["distance"] / 1000.0
-                else:
-                    road_distance_km = haversine_km(bus_lat, bus_lng, stop_lat, stop_lng)
-            except Exception:
-                road_distance_km = haversine_km(bus_lat, bus_lng, stop_lat, stop_lng)
+            # Use straight-line distance for ETA
+            road_distance_km = haversine_km(bus_lat, bus_lng, stop_lat, stop_lng)
 
             # travel time
             multiplier = time_of_day_multiplier(now)
@@ -205,11 +263,11 @@ def stop_schedule(stop_id: int):
                 "fare_inr": 10
             })
 
-        # also include scheduled times (optional, if you want both)
+        # Optional: include scheduled departures
         sched_rows = db_query("SELECT departure_time FROM schedules WHERE route_id=? ORDER BY departure_time ASC", (route_id,))
         for (dep_time_str,) in sched_rows:
             results.append({
-                "bus_id": None,  # schedule only, no live bus
+                "bus_id": None,
                 "route_id": route_id,
                 "stop_id": stop_id,
                 "scheduled_time": dep_time_str,
@@ -219,9 +277,10 @@ def stop_schedule(stop_id: int):
                 "fare_inr": 10
             })
 
-    # sort by soonest ETA first
+    # Sort soonest ETA first
     results.sort(key=lambda x: x["eta_minutes"] if x["eta_minutes"] is not None else 99999)
     return {"stop_id": stop_id, "arrivals": results}
+
 
 
 

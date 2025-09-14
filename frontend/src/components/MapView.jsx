@@ -30,7 +30,7 @@ const userIcon = new L.Icon({
 });
 
 const busIcon = new L.Icon({
-  iconUrl: "https://cdn-icons-png.flaticon.com/512/422/422962.png", // 🚌 proper bus icon
+  iconUrl: "https://cdn-icons-png.flaticon.com/512/422/422962.png",
   iconSize: [36, 36],
   iconAnchor: [18, 36],
   popupAnchor: [0, -30],
@@ -52,43 +52,35 @@ const RecenterMap = ({ userLocation }) => {
 const MapView = ({
   userLocation,
   stops = [],
-  buses = [],
   nearestStop = null,
   walkingInfo = null,
 }) => {
-  const [busPositions, setBusPositions] = useState({});
-  const [walkingPath, setWalkingPath] = useState([]);
-  const [selectedBusRoute, setSelectedBusRoute] = useState([]);
+  const [liveBuses, setLiveBuses] = useState([]);
   const [selectedBusInfo, setSelectedBusInfo] = useState(null);
+  const [selectedBusRoute, setSelectedBusRoute] = useState([]);
 
-  // init bus positions
+  // Poll live buses every 5s
   useEffect(() => {
-    const init = {};
-    buses.forEach((b) => (init[b.id] = 0));
-    setBusPositions(init);
-  }, [buses]);
+    let mounted = true;
+    const fetchLiveBuses = async () => {
+      try {
+        const res = await api.get("/live-buses");
+        if (!mounted) return;
+        setLiveBuses(res.data);
+      } catch (err) {
+        console.error("Fetch /live-buses error:", err);
+      }
+    };
+    fetchLiveBuses();
+    const interval = setInterval(fetchLiveBuses, 5000);
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
+  }, []);
+  // compute walking path (OSRM) from user to nearest stop
+  const [walkingPath, setWalkingPath] = useState([]);
 
-  // animate buses
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setBusPositions((prev) => {
-        const next = { ...prev };
-        buses.forEach((bus) => {
-          const route = bus.route_coords?.length
-            ? bus.route_coords
-            : [[bus.current_lat, bus.current_lng]];
-          const len = route.length;
-          if (!len) return;
-          const cur = prev[bus.id] ?? 0;
-          next[bus.id] = (cur + 1) % len;
-        });
-        return next;
-      });
-    }, 2000);
-    return () => clearInterval(interval);
-  }, [buses]);
-
-  // compute walking path (OSRM)
   useEffect(() => {
     const fetchWalkingRoute = async () => {
       if (!userLocation || !nearestStop) {
@@ -107,6 +99,7 @@ const MapView = ({
         }
       } catch (e) {
         console.error("OSRM walking error:", e);
+        setWalkingPath([]);
       }
     };
     fetchWalkingRoute();
@@ -114,9 +107,7 @@ const MapView = ({
 
   const onBusClick = async (bus) => {
     setSelectedBusInfo(bus);
-    if (bus.route_coords?.length) {
-      setSelectedBusRoute(bus.route_coords);
-    }
+    // fetch route coordinates if needed
     try {
       const res = await api.get("/eta-to-user", {
         params: {
@@ -126,17 +117,10 @@ const MapView = ({
         },
       });
       setSelectedBusInfo({ ...bus, eta: res.data });
+      if (bus.route_coords) setSelectedBusRoute(bus.route_coords);
     } catch (err) {
       console.error("ETA fetch error", err);
     }
-  };
-
-  const getBusPosition = (bus) => {
-    const route = bus.route_coords?.length
-      ? bus.route_coords
-      : [[bus.current_lat, bus.current_lng]];
-    const idx = busPositions[bus.id] ?? 0;
-    return route[idx] || route[0];
   };
 
   return (
@@ -148,53 +132,45 @@ const MapView = ({
       style={{ height: "100%", width: "100%" }}
     >
       <RecenterMap userLocation={userLocation} />
-
-      {/* walking path */}
       {walkingPath.length > 0 && (
         <Polyline positions={walkingPath} dashArray="6,8" color="purple" />
       )}
-
-      {/* selected bus route */}
+      {/* Selected bus route */}
       {selectedBusRoute.length > 0 && (
         <Polyline positions={selectedBusRoute} color="blue" weight={4} />
       )}
 
-      {/* bus markers */}
-      {buses.map((bus) => {
-        const pos = getBusPosition(bus);
-        return (
-          <Marker
-            key={bus.id}
-            position={pos}
-            icon={busIcon}
-            eventHandlers={{ click: () => onBusClick(bus) }}
-          >
-            <Popup>
-              <div>
+      {/* Bus markers */}
+      {liveBuses.map((bus) => (
+        <Marker
+          key={bus.id}
+          position={[bus.lat, bus.lng]}
+          icon={busIcon}
+          eventHandlers={{ click: () => onBusClick(bus) }}
+        >
+          <Popup>
+            <div>
+              <strong>Bus #{bus.id}</strong>
+              <div>Route: {bus.route_id}</div>
+              {selectedBusInfo?.id === bus.id && selectedBusInfo.eta && (
                 <div>
-                  <strong>Bus #{bus.id}</strong>
+                  ETA: ~{Math.round(selectedBusInfo.eta.eta_minutes)} min <br />
+                  Fare: ₹{selectedBusInfo.eta.fare_inr}
                 </div>
-                <div>Route: {bus.route_id}</div>
-                {selectedBusInfo?.id === bus.id && (
-                  <div>
-                    ETA: ~10 min <br />
-                    Fare: ₹20
-                  </div>
-                )}
-              </div>
-            </Popup>
-          </Marker>
-        );
-      })}
+              )}
+            </div>
+          </Popup>
+        </Marker>
+      ))}
 
-      {/* stops */}
+      {/* Stops */}
       {stops.map((stop) => (
         <Marker key={stop.id} position={[stop.lat, stop.lng]}>
           <Popup>{stop.name}</Popup>
         </Marker>
       ))}
 
-      {/* nearest stop */}
+      {/* Nearest stop */}
       {nearestStop && (
         <Marker position={[nearestStop.lat, nearestStop.lng]}>
           <Popup>
@@ -207,7 +183,7 @@ const MapView = ({
         </Marker>
       )}
 
-      {/* user */}
+      {/* User */}
       {userLocation && (
         <Marker position={[userLocation.lat, userLocation.lng]} icon={userIcon}>
           <Popup>You are here</Popup>
