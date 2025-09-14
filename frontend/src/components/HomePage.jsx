@@ -71,8 +71,8 @@ const HomePage = () => {
               </button>
             </StyledWrapper>
             <StyledWrapper className="m-[1rem]">
-              <button className="cta">
-                <span className="span">Check Schedules</span>
+              <button className="cta" onClick={() => navigate("/sos")}>
+                <span className="span">Send SOS</span>
                 <span className="second">
                   <svg
                     width="50px"

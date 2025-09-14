@@ -3,6 +3,7 @@ import FindBus from "./components/FindBus";
 import Navbar from "./components/Navbar";
 import SignIn from "./components/SignIn";
 import { Routes, Route } from "react-router-dom";
+import Sos from "./components/Sos.jsx"
 
 function App() {
   return (
@@ -10,7 +11,8 @@ function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/findbus" element={<FindBus />} />
-        <Route path="/signin" element={<SignIn />} />
+        <Route path="/language" element={<SignIn />} />
+        <Route path="/sos" element={<Sos />} />
       </Routes>
     </>
   );

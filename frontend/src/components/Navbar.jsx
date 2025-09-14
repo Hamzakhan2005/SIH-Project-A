@@ -8,6 +8,7 @@ import Tooltip, { tooltipClasses } from "@mui/material/Tooltip";
 import Stack from "@mui/material/Stack";
 import styled from "styled-components";
 import "./Navbar.css"
+import { Languages } from 'lucide-react';
 import {useState} from "react"
 
 const BootstrapTooltip = muiStyled(({ className, ...props }) => (
@@ -82,6 +83,7 @@ const Navbar = () => {
             >
               Sign In
             </Button>
+            <Button onClick={() => navigate("/language")}><Languages/></Button>
           </Stack>
         </div>
         <div className="hamburger" onClick={() => setIsOpen(true)}>
@@ -104,6 +106,7 @@ const Navbar = () => {
             >
               Sign In
             </Button>
+            <Button onClick={() => navigate("/language")}><Languages/></Button>
           </div>
         </div>
       )}
