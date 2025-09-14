@@ -30,7 +30,7 @@ const userIcon = new L.Icon({
 });
 
 const busIcon = new L.Icon({
-  iconUrl: "https://cdn-icons-png.flaticon.com/512/422/422962.png",
+  iconUrl: "bus.png",
   iconSize: [36, 36],
   iconAnchor: [18, 36],
   popupAnchor: [0, -30],

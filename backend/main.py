@@ -21,9 +21,9 @@ cur_bg.execute("PRAGMA journal_mode=WAL;")
 db_lock = threading.Lock()
 app=FastAPI()
 origins = [
-    # "http://localhost:5173",
-    # "http://127.0.0.1:5173"
-    "https://sih-project-a.vercel.app"
+    "http://localhost:5173",
+    "http://127.0.0.1:5173"
+    # "https://sih-project-a.vercel.app"
 ]
 
 
