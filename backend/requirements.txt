@@ -3,3 +3,4 @@ uvicorn[standard]
 pydantic
 geopy
 python-dateutil
+requests
