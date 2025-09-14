@@ -21,9 +21,9 @@ cur_bg.execute("PRAGMA journal_mode=WAL;")
 db_lock = threading.Lock()
 app=FastAPI()
 origins = [
-    # "http://localhost:5173",
-    # "http://127.0.0.1:5173"
-    "https://sih-project-a.vercel.app"
+    "http://localhost:5173",
+    "http://127.0.0.1:5173"
+    # "https://sih-project-a.vercel.app"
 ]
 
 
@@ -72,6 +72,13 @@ def haversine_km(lat1, lon1, lat2, lon2):
     c = 2*atan2(sqrt(a), sqrt(1-a))
     return R * c
 
+def interpolate_coords(lat1, lng1, lat2, lng2, fraction):
+    """Return a point fraction (0-1) along the line from (lat1,lng1) to (lat2,lng2)."""
+    lat = lat1 + (lat2 - lat1) * fraction
+    lng = lng1 + (lng2 - lng1) * fraction
+    return lat, lng
+
+
 def time_of_day_multiplier(dt: datetime):
     # your traffic multipliers (tweakable)
     h = dt.hour
@@ -84,18 +91,39 @@ def time_of_day_multiplier(dt: datetime):
     return 1.0
 
 async def move_buses():
-    poll_seconds = 5
+    poll_seconds = 1  # smaller interval for smooth movement
+    bus_speed_kmph = 25.0
+
     while True:
+        now = datetime.now()
         for bus_id, st in list(live_state.items()):
             coords = st.get("coords", [])
-            if not coords:
+            if len(coords) < 2:
                 continue
 
-            idx = (st["idx"] + 1) % len(coords)
-            next_lat, next_lng = coords[idx]
-            live_state[bus_id].update({"lat": next_lat, "lng": next_lng, "idx": idx})
+            idx = st["idx"]
+            next_idx = (idx + 1) % len(coords)
+
+            lat1, lng1 = coords[idx]
+            lat2, lng2 = coords[next_idx]
+
+            # distance between stops
+            dist_km = haversine_km(lat1, lng1, lat2, lng2)
+            # distance covered per poll
+            fraction = (bus_speed_kmph / 3600) * poll_seconds / dist_km  # km/sec / distance
+            fraction = min(fraction, 1.0)
+
+            # interpolate position
+            new_lat, new_lng = interpolate_coords(lat1, lng1, lat2, lng2, fraction)
+
+            # if reached next stop, update idx
+            if fraction >= 1.0:
+                idx = next_idx
+
+            live_state[bus_id].update({"lat": new_lat, "lng": new_lng, "idx": idx})
 
         await asyncio.sleep(poll_seconds)
+
 
 @app.on_event("startup")
 def startup_tasks():
@@ -131,6 +159,7 @@ def start_background_loop(loop):
     loop.run_until_complete(move_buses())
 
 
+
 app.add_middleware(
      CORSMiddleware,
      allow_origins=origins,
@@ -152,8 +181,15 @@ def get_stops():
 
 @app.get("/live-buses")
 def get_live_buses():
-    return [{"id": bid, "lat": st["lat"], "lng": st["lng"]} for bid, st in live_state.items()]
-
+    return [
+        {
+            "id": bid,
+            "lat": st["lat"],
+            "lng": st["lng"],
+            "route_coords": st["coords"]  # include full route for frontend
+        }
+        for bid, st in live_state.items()
+    ]
 
 @app.get("/bus-routes")
 def get_routes():
@@ -186,37 +222,16 @@ import requests
 
 @app.get("/all-buses")
 def all_buses():
-    rows = db_query("SELECT id, route_id, current_lat, current_lng FROM buses")
-    stops_rows = db_query("SELECT id, lat, lng FROM stops")
-    route_stops_rows = db_query("SELECT route_id, stop_id FROM route_stops ORDER BY stop_order")
+    return [
+        {
+            "id": bid,
+            "lat": st["lat"],
+            "lng": st["lng"],
+            "route_coords": st["coords"]
+        }
+        for bid, st in live_state.items()
+    ]
 
-    # Mapping for easy access
-    stop_map = {r[0]: (r[1], r[2]) for r in stops_rows}
-    route_map = {}
-    for r in route_stops_rows:
-        route_map.setdefault(r[0], []).append(r[1])
-
-    result = []
-
-    for bus_id, route_id, cur_lat, cur_lng in rows:
-        route_stops = route_map.get(route_id, [])
-
-        # Simple straight-line route coordinates
-        coords = []
-        for stop_id in route_stops:
-            if stop_id in stop_map:
-                coords.append([stop_map[stop_id][0], stop_map[stop_id][1]])
-
-        result.append({
-            "id": bus_id,
-            "route_id": route_id,
-            "current_lat": cur_lat,
-            "current_lng": cur_lng,
-            "route_stops": route_stops,
-            "route_coords": coords
-        })
-
-    return result
 
 
 

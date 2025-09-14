@@ -1,0 +1,44 @@
+/* 📱 Mobile styles */
+@media (max-width: 768px) {
+     /* Make main container scrollable and padded */
+     .homepage-container {
+       width: 100vw !important;
+       padding: 2vh 2vw !important;
+     }
+   
+     /* Stack the sections vertically */
+     .content-section {
+       flex-direction: column !important;
+       width: 100% !important;
+       align-items: center;
+     }
+   
+     /* Left (nearest stop + arrivals) */
+     .content-section > div:first-child {
+       width: 100% !important;
+     }
+   
+     /* Right (map section) */
+     .content-section > div:last-child {
+       width: 100% !important;
+       margin-top: 2vh;
+     }
+   
+     /* Arrivals card adjusts */
+     .arrivals-card {
+       height: auto !important;
+       max-height: 40vh !important;
+     }
+   
+     /* Search bar wraps properly */
+     .search-bar {
+       flex-direction: column !important;
+       gap: 10px;
+     }
+   
+     /* Map smaller for mobile */
+     .map-container {
+       height: 40vh !important;
+     }
+   }
+   

@@ -3,23 +3,23 @@ import Navbar from "./Navbar";
 import { useNavigate } from "react-router-dom";
 import Footer from "./Footer";
 import styled from "styled-components";
-
+import "./Home.css";
 const HomePage = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="bg-[#fff] ">
+    <div className="bg-[#fff] w-[100%]">
       <Navbar />
       <div
-        className="pt-[1vh] h-[100vh] flex justify-center items-center"
+        className="pt-[1vh]  h-[88vh] flex justify-center sm:flex-col hero-container"
         style={{
           background:
             "linear-gradient(to right,rgb(187, 244, 203) 0%, #ffffff 50%,rgb(248, 219, 186) 100%)",
         }}
       >
-        <div className="w-[50vw] flex flex-col items-start h-[60vh]  ">
+        <div className="py-[4vh] w-[50vw] flex flex-col items-start h-[60vh] hero-text ">
           <div className="text-center p-[1rem]">
-            <h1 className="text-[3rem]">
+            <h1 className="text-[3rem] sm:text-[1rem]">
               Reimagining <span>Public Transport.</span>
               <br />
               for the Next <span className="text-[#24ab3f]">Decade.</span>
@@ -30,7 +30,7 @@ const HomePage = () => {
               woven into one experience.
             </p>
           </div>
-          <div className="flex items-center justify-center">
+          <div className="flex items-center justify-center hero-buttons">
             <StyledWrapper className="m-[1rem]">
               <button className="cta" onClick={() => navigate("/findbus")}>
                 <span className="span">Check Rides</span>
@@ -111,8 +111,8 @@ const HomePage = () => {
             </StyledWrapper>
           </div>
         </div>
-        <div className="h-[60vh]  relative flex items-center justify-center">
-          <img src="imag1.jpg" alt="" className="w-[25vw] z-10" />
+        <div className="h-[60vh] py-[4vh] hero-img-contain">
+          <img src="imag1.jpg" alt="" className="w-[25vw]  sm:w-[70vw] hero-img" />
         </div>
       </div>
 

@@ -1,0 +1,44 @@
+/* responsive.css */
+
+/* Mobile styles */
+@media (max-width: 768px) {
+     .hero-container {
+       flex-direction: column !important;
+       height: auto !important;
+     }
+   
+     .hero-text {
+       width: 100vw !important;
+       text-align: center !important;
+       height: auto !important;
+     }
+     .hero-buttons {
+          width:100%;
+          justiy-content:center;
+          alighn-items:center;
+          flex-direction:column;
+        }
+     .hero-text h1 {
+       font-size: 1.5rem !important;
+     }
+   
+     .hero-text p {
+       font-size: 1rem !important;
+     }
+   
+     .hero-img {
+       width: 80vw !important;
+       height: auto !important;
+     }
+     .hero-img-contain{
+          display:flex;
+          justiy-content:center;
+          alighn-items:center;
+          margin-left:10vw;
+     }
+     .cta {
+       width: 80vw !important;
+       margin: 0.5rem auto !important;
+     }
+   }
+   

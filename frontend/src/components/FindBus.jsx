@@ -8,6 +8,7 @@ import api from "../api.js";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import { useRef, useState, useEffect } from "react";
 import MapView from "./MapView";
+import "./FindBus.css"
 
 const FindBus = () => {
   const [stops, setStops] = useState([]);
@@ -153,6 +154,7 @@ const FindBus = () => {
     <div>
       <Navbar />
       <div
+      className="homepage-container"
         style={{
           width: "98vw",
           height: "150vh",
@@ -165,7 +167,7 @@ const FindBus = () => {
         }}
       >
         <div
-          className="flex items-center justify-center"
+          className="flex items-center justify-center search-bar"
           style={{ marginBottom: 12 }}
         >
           <div style={{ marginRight: 12 }}>
@@ -186,6 +188,7 @@ const FindBus = () => {
             justifyContent: "space-between",
             marginTop: "2vh",
           }}
+          className="content-section"
         >
           <div
             style={{
@@ -194,6 +197,7 @@ const FindBus = () => {
               flexDirection: "column",
               gap: 12,
             }}
+            className="left-section"
           >
             <div
               style={{
@@ -202,6 +206,7 @@ const FindBus = () => {
                 borderRadius: 10,
                 boxShadow: "0 1px 6px rgba(0,0,0,0.1)",
               }}
+              className="arrivals-card"
             >
               <h2>Nearest Bus Stop</h2>
               {nearestStop ? (
@@ -229,6 +234,7 @@ const FindBus = () => {
                 height: "45vh",
                 overflow: "auto",
               }}
+              className="right-section"
             >
               <h3>Arrivals </h3>
               {loadingArrivals ? <p>Loading...</p> : null}
@@ -256,6 +262,7 @@ const FindBus = () => {
               flexDirection: "column",
               alignItems: "center",
             }}
+            className="map-container"
           >
             <h1>Buses Around You</h1>
             <div

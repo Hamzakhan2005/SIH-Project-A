@@ -105,23 +105,13 @@ const MapView = ({
     fetchWalkingRoute();
   }, [userLocation, nearestStop]);
 
-  const onBusClick = async (bus) => {
-    setSelectedBusInfo(bus);
-    // fetch route coordinates if needed
-    try {
-      const res = await api.get("/eta-to-user", {
-        params: {
-          bus_id: bus.id,
-          user_lat: userLocation.lat,
-          user_lng: userLocation.lng,
-        },
-      });
-      setSelectedBusInfo({ ...bus, eta: res.data });
-      if (bus.route_coords) setSelectedBusRoute(bus.route_coords);
-    } catch (err) {
-      console.error("ETA fetch error", err);
-    }
-  };
+  const onBusClick = (bus) => {
+  setSelectedBusInfo(bus);
+  if (bus.route_coords) {
+    setSelectedBusRoute(bus.route_coords); // highlight the path
+  }
+};
+
 
   return (
     <MapContainer
