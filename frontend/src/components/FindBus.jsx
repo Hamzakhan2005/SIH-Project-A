@@ -8,9 +8,12 @@ import api from "../api.js";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import { useRef, useState, useEffect } from "react";
 import MapView from "./MapView";
-import "./FindBus.css"
+import { useNavigate } from "react-router-dom";
+
+import "./FindBus.css";
 
 const FindBus = () => {
+  const navigate = useNavigate();
   const [stops, setStops] = useState([]);
   const [buses, setBuses] = useState([]);
   const [userLocation, setUserLocation] = useState(null);
@@ -118,18 +121,6 @@ const FindBus = () => {
       walking_minutes: Number(walking_minutes.toFixed(1)),
     });
 
-    // fetch walking path (MapView already also computes, but fetching here so UI can show ETA quickly)
-    (async () => {
-      try {
-        const pathRes = await fetch(
-          `/api_dummy_walking?start_lat=${userLocation.lat}&start_lng=${userLocation.lng}&end_lat=${nearest.lat}&end_lng=${nearest.lng}`
-        );
-        // NOTE: we will let MapView compute actual OSRM path; this is placeholder
-      } catch (e) {
-        // non-fatal
-      }
-    })();
-
     // fetch arrivals for nearest stop
     (async () => {
       if (!nearest) return;
@@ -154,7 +145,7 @@ const FindBus = () => {
     <div>
       <Navbar />
       <div
-      className="homepage-container"
+        className="homepage-container"
         style={{
           width: "98vw",
           height: "150vh",
@@ -178,6 +169,9 @@ const FindBus = () => {
           </div>
           <Button variant="contained" onClick={handleLocate}>
             <LocationOnIcon /> Location
+          </Button>
+          <Button variant="contained" onClick={() => navigate("/voice")}>
+            <LocationOnIcon /> Use Voice Assistant
           </Button>
         </div>
 
