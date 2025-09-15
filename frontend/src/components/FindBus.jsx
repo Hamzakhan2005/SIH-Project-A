@@ -165,6 +165,7 @@ const FindBus = () => {
             <input
               placeholder="search..."
               style={{ padding: 10, width: 220 }}
+              className="rounded-md"
             />
           </div>
           <Button variant="contained" onClick={handleLocate}>
@@ -266,6 +267,7 @@ const FindBus = () => {
                 borderRadius: 10,
                 overflow: "hidden",
               }}
+              className="rounded-md"
             >
               <MapView
                 userLocation={userLocation}

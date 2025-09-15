@@ -111,8 +111,12 @@ const HomePage = () => {
             </StyledWrapper>
           </div>
         </div>
-        <div className="h-[60vh] py-[4vh] hero-img-contain">
-          <img src="imag1.jpg" alt="" className="w-[25vw]  sm:w-[70vw] hero-img" />
+        <div className="h-[60vh] py-[4vh] hero-img-contain rounded-md">
+          <img
+            src="imag1.jpg"
+            alt=""
+            className="w-[25vw]  sm:w-[70vw] hero-img"
+          />
         </div>
       </div>
 
