@@ -59,10 +59,10 @@ export default function ChatAssistantPage() {
 
           {/* Greeting Text */}
           <div className="text-center mb-[48px] space-y-[8px]">
-            <h1 className="text-[32px] font-[700] text-[#ffffff] mb-[4px]">
-              Hey Shiva!
+            <h1 className="text-[32px] font-[700] text-[#6b7280] mb-[4px]">
+              Hey Hamza!
             </h1>
-            <h2 className="text-[28px] font-[600] text-[#ffffff] mb-[12px]">
+            <h2 className="text-[28px] font-[600] text-[#6b7280] mb-[12px]">
               How can I help with your journey??
             </h2>
             <p className="text-[#6b7280] text-[16px]">
