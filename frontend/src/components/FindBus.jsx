@@ -174,7 +174,7 @@ const FindBus = () => {
           <Button
             variant="contained"
             onClick={() => navigate("/voice")}
-            className="m-[1rem]"
+            className="ml-[1rem]"
           >
             <LocationOnIcon /> Use Voice Assistant
           </Button>
