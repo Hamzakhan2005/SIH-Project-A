@@ -158,7 +158,7 @@ const FindBus = () => {
         }}
       >
         <div
-          className="flex items-center justify-center search-bar"
+          className="flex items-center justify-center search-bar gap-[1rem]"
           style={{ marginBottom: 12 }}
         >
           <div style={{ marginRight: 12 }}>
@@ -271,7 +271,7 @@ const FindBus = () => {
                 borderRadius: 10,
                 overflow: "hidden",
               }}
-              className="rounded-md"
+              className="rounded-lg"
             >
               <MapView
                 userLocation={userLocation}
