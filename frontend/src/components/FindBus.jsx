@@ -9,6 +9,15 @@ import LocationOnIcon from "@mui/icons-material/LocationOn";
 import { useRef, useState, useEffect } from "react";
 import MapView from "./MapView";
 import { useNavigate } from "react-router-dom";
+import {
+  Search,
+  MapPin,
+  Mic,
+  User,
+  ChevronDown,
+  Clock,
+  Bus,
+} from "lucide-react";
 
 import "./FindBus.css";
 
@@ -126,11 +135,10 @@ const FindBus = () => {
       if (!nearest) return;
       setLoadingArrivals(true);
       try {
-        // call backend endpoint we discussed
         const res = await api.get(
           `/stop-schedule/${nearest.id}?window_minutes=30&user_lat=${userLocation.lat}&user_lng=${userLocation.lng}`
         );
-        // expected: { stop_id: ..., arrivals: [...] }
+
         setArrivals(res.data.arrivals || []);
       } catch (err) {
         console.error("Error fetching arrivals:", err);
@@ -144,143 +152,168 @@ const FindBus = () => {
   return (
     <div>
       <Navbar />
-      <div
-        className="homepage-container"
-        style={{
-          width: "98vw",
-          height: "150vh",
-          padding: "1vh 1vw",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          background:
-            "linear-gradient(to right, #bbe4cb 0%, #ffffff 50%, #f8dbba 100%)",
-        }}
-      >
-        <div
-          className="flex items-center justify-center search-bar gap-[1rem]"
-          style={{ marginBottom: 12 }}
-        >
-          <div style={{ marginRight: 12 }}>
-            <input
-              placeholder="search..."
-              style={{ padding: 10, width: 220 }}
-              className="rounded-md"
-            />
+      <div className="w-[98vw] h-[150vh] p-[1vh_1vw] flex flex-col items-center bg-[#1a1a1a]">
+        {/* Header with Search */}
+        <div className="flex items-center justify-between w-[100%] max-w-[1200px] mb-[24px] px-[24px] py-[16px]">
+          <div className="flex-[1] max-w-[400px] mx-[24px]">
+            <div className="relative">
+              <Search className="absolute left-[12px] top-[50%] transform -translate-y-[50%] text-[#6b7280] w-[20px] h-[20px]" />
+              <input
+                type="text"
+                placeholder="Enter route, stop, or destination..."
+                className="w-[100%] pl-[40px] pr-[16px] py-[12px] bg-[#2a2a2a] border border-[#404040] rounded-[50px] text-[#ffffff] placeholder-[#6b7280] focus:outline-none focus:ring-[2px] focus:ring-[#10b981]"
+              />
+              <Mic className="absolute right-[12px] top-[50%] transform -translate-y-[50%] text-[#6b7280] w-[20px] h-[20px] cursor-pointer hover:text-[#10b981]" />
+            </div>
           </div>
-          <Button variant="contained" onClick={handleLocate}>
-            <LocationOnIcon /> Location
-          </Button>
-          <Button
-            variant="contained"
-            onClick={() => navigate("/voice")}
-            className="ml-[1rem]"
+          <button
+            onClick={handleLocate}
+            className="bg-[#10b981] hover:bg-[#059669] text-[#ffffff] px-[20px] py-[10px] rounded-[8px] font-[500] text-[14px] transition-colors flex items-center gap-[8px]"
           >
-            <LocationOnIcon /> Use Voice Assistant
-          </Button>
+            <MapPin className="w-[16px] h-[16px]" />
+            Location
+          </button>
+          <button
+            onClick={() => navigate("/voice")}
+            className="bg-[#2a2a2a] hover:bg-[#3a3a3a] text-[#ffffff] px-[20px] py-[10px] rounded-[8px] font-[500] text-[14px] transition-colors border border-[#404040] flex items-center gap-[8px]"
+          >
+            <Mic className="w-[16px] h-[16px]" />
+            Use Voice Assistant
+          </button>
         </div>
 
-        <div
-          style={{
-            width: "80%",
-            display: "flex",
-            justifyContent: "space-between",
-            marginTop: "2vh",
-          }}
-          className="content-section"
-        >
-          <div
-            style={{
-              width: "30%",
-              display: "flex",
-              flexDirection: "column",
-              gap: 12,
-            }}
-            className="left-section"
-          >
-            <div
-              style={{
-                background: "#fff",
-                padding: 12,
-                borderRadius: 10,
-                boxShadow: "0 1px 6px rgba(0,0,0,0.1)",
-              }}
-              className="arrivals-card"
-            >
-              <h2>Nearest Bus Stop</h2>
+        {/* Main Content */}
+        <div className="w-[80%] flex justify-between mt-[2vh] gap-[24px] max-w-[1200px]">
+          {/* Left Section */}
+          <div className="w-[35%] flex flex-col gap-[16px]">
+            {/* Nearest Bus Stop Card */}
+            <div className="bg-[#2a2a2a] p-[20px] rounded-[12px] border border-[#404040]">
+              <div className="flex items-center justify-between mb-[12px]">
+                <h2 className="text-[#ffffff] text-[18px] font-[600]">
+                  Nearest bus stop
+                </h2>
+                <button className="text-[#6b7280] hover:text-[#10b981] text-[12px]">
+                  See all stops
+                </button>
+              </div>
+
               {nearestStop ? (
-                <>
-                  <p style={{ margin: 0, fontWeight: 600 }}>
-                    {nearestStop.name}
-                  </p>
-                  <p style={{ margin: 0 }}>
-                    Distance: {walkingInfo?.distance_km} km
-                  </p>
-                  <p style={{ margin: 0 }}>
-                    Walking ETA: {walkingInfo?.walking_minutes} min
-                  </p>
-                </>
+                <div className="bg-[#1a1a1a] p-[16px] rounded-[8px] border border-[#404040] mb-[16px]">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-[8px]">
+                      <MapPin className="w-[16px] h-[16px] text-[#10b981] flex-shrink-0 mt-[2px]" />
+                      <div>
+                        <p className="text-[#ffffff] font-[600] text-[14px] mb-[4px]">
+                          {nearestStop.name}
+                        </p>
+                        <p className="text-[#6b7280] text-[12px] mb-[2px]">
+                          Distance: {walkingInfo?.distance_km} km
+                        </p>
+                        <p className="text-[#6b7280] text-[12px]">
+                          Walking ETA: {walkingInfo?.walking_minutes} min
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               ) : (
-                <p>Click Location to find nearest stop</p>
+                <p className="text-[#6b7280] text-[14px]">
+                  Click Location to find nearest stop
+                </p>
               )}
             </div>
 
-            <div
-              style={{
-                background: "#fff",
-                padding: 12,
-                borderRadius: 10,
-                height: "45vh",
-                overflow: "auto",
-              }}
-              className="right-section"
-            >
-              <h3>Arrivals </h3>
-              {loadingArrivals ? <p>Loading...</p> : null}
-              {!loadingArrivals && arrivals.length === 0 && <p>No arrivals </p>}
-              <ul style={{ paddingLeft: 16 }}>
-                {arrivals.map((a, idx) => (
-                  <li key={idx} style={{ marginBottom: 8 }}>
-                    <div>
-                      <strong>Bus #{a.bus_id}</strong> (Route {a.route_id})
-                    </div>
-                    <div>
-                      Scheduled: {a.scheduled_time} • ETA: {a.eta_minutes} min •
-                      Fare: ₹{a.fare_inr}
-                    </div>
-                  </li>
-                ))}
-              </ul>
+            {/* Bottom Cards */}
+            <div className="grid grid-cols-2 gap-[12px]">
+              <div className="bg-[#2a2a2a] p-[16px] rounded-[8px] border border-[#404040]">
+                <div className="w-[32px] h-[32px] bg-[#10b981] rounded-[8px] flex items-center justify-center mb-[8px]">
+                  <span className="text-[#ffffff] text-[12px] font-[600]">
+                    U
+                  </span>
+                </div>
+                <h4 className="text-[#ffffff] text-[12px] font-[600] mb-[4px]">
+                  Update
+                </h4>
+                <p className="text-[#6b7280] text-[10px] leading-[1.3]">
+                  Connect with your colleagues within the app now!
+                </p>
+              </div>
+
+              <div className="bg-[#2a2a2a] p-[16px] rounded-[8px] border border-[#404040]">
+                <div className="w-[32px] h-[32px] bg-[#dc2626] rounded-[8px] flex items-center justify-center mb-[8px]">
+                  <span className="text-[#ffffff] text-[12px] font-[600]">
+                    T
+                  </span>
+                </div>
+                <h4 className="text-[#ffffff] text-[12px] font-[600] mb-[4px]">
+                  Tips
+                </h4>
+                <p className="text-[#6b7280] text-[10px] leading-[1.3]">
+                  Reserve your desk prior to others!
+                </p>
+              </div>
+            </div>
+
+            {/* Arrivals List */}
+            <div className="bg-[#2a2a2a] p-[20px] rounded-[12px] border border-[#404040] h-[45vh] overflow-auto">
+              <h3 className="text-[#ffffff] text-[16px] font-[600] mb-[16px] flex items-center gap-[8px]">
+                <Clock className="w-[16px] h-[16px] text-[#10b981]" />
+                Arrivals
+              </h3>
+              {loadingArrivals ? (
+                <p className="text-[#6b7280] text-[14px]">Loading...</p>
+              ) : (
+                <div className="space-y-[12px]">
+                  {arrivals.length === 0 ? (
+                    <p className="text-[#6b7280] text-[14px]">No arrivals</p>
+                  ) : (
+                    arrivals.map((a, idx) => (
+                      <div
+                        key={idx}
+                        className="p-[12px] bg-[#1a1a1a] rounded-[8px] border border-[#404040]"
+                      >
+                        <div className="flex items-center justify-between mb-[4px]">
+                          <span className="text-[#ffffff] font-[600] text-[14px]">
+                            Bus #{a.bus_id}
+                          </span>
+                          <span className="text-[#10b981] text-[12px] font-[500]">
+                            {a.eta_minutes} min away
+                          </span>
+                        </div>
+                        <p className="text-[#6b7280] text-[12px] mb-[2px]">
+                          Route {a.route_id}
+                        </p>
+                        <div className="flex items-center justify-between">
+                          <span className="text-[#6b7280] text-[12px]">
+                            Scheduled: {a.scheduled_time}
+                          </span>
+                          <span className="text-[#f59e0b] text-[12px] font-[500]">
+                            ₹{a.fare_inr}
+                          </span>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
             </div>
           </div>
-
           <div
             style={{
-              width: "65%",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
+              width: "100%",
+              height: "55vh",
+              borderRadius: 10,
+              overflow: "hidden",
             }}
-            className="map-container"
+            className="rounded-lg"
           >
-            <h1>Buses Around You</h1>
-            <div
-              style={{
-                width: "100%",
-                height: "55vh",
-                borderRadius: 10,
-                overflow: "hidden",
-              }}
-              className="rounded-lg"
-            >
-              <MapView
-                userLocation={userLocation}
-                stops={stops}
-                buses={buses}
-                nearestStop={nearestStop}
-                walkingInfo={walkingInfo}
-              />
-            </div>
+            <MapView
+              userLocation={userLocation}
+              stops={stops}
+              buses={buses}
+              nearestStop={nearestStop}
+              walkingInfo={walkingInfo}
+            />
           </div>
         </div>
       </div>

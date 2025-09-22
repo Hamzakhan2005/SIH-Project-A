@@ -2,6 +2,64 @@ import React from "react";
 import Navbar from "./Navbar";
 import { useNavigate } from "react-router-dom";
 import Footer from "./Footer";
+import { useState } from "react";
+import {
+  Star,
+  ArrowRight,
+  MapPin,
+  Clock,
+  Globe,
+  Users,
+  QrCode,
+  Zap,
+  Shield,
+  Bell,
+} from "lucide-react";
+const benefits = [
+  {
+    icon: MapPin,
+    title: "Live GPS Tracking",
+    description: "Track buses and metros in real time.",
+  },
+  {
+    icon: Clock,
+    title: "Smart Schedules",
+    description: "Always updated with city timings.",
+  },
+  {
+    icon: Globe,
+    title: "Multilingual",
+    description: "Easy access in your local language.",
+  },
+  {
+    icon: Users,
+    title: "Seat Availability",
+    description: "Know crowd levels before you board.",
+  },
+  {
+    icon: QrCode,
+    title: "QR Instant Info",
+    description: "Scan at stops for live route info.",
+  },
+  {
+    icon: Zap,
+    title: "AI Prediction",
+    description: "Smarter ETAs with real-time city data.",
+  },
+  {
+    icon: Bell,
+    title: "Smart Alerts",
+    description: "Get timely and route change updates instantly.",
+  },
+  {
+    icon: Shield,
+    title: "Safety First",
+    description: "Travel securely with verified systems.",
+  },
+];
+
+const logos = ["Logolpsum", "Logolpsum", "Logolpsum", "Logolpsum", "Logolpsum"];
+
 import styled from "styled-components";
 import "./Home.css";
 const HomePage = () => {
@@ -10,113 +68,95 @@ const HomePage = () => {
   return (
     <div className="bg-[#fff] w-[100%]">
       <Navbar />
-      <div
-        className="pt-[1vh]  h-[88vh] flex justify-center sm:flex-col hero-container"
-        style={{
-          background:
-            "linear-gradient(to right,rgb(187, 244, 203) 0%, #ffffff 50%,rgb(248, 219, 186) 100%)",
-        }}
-      >
-        <div className="py-[4vh] w-[50vw] flex flex-col items-start h-[60vh] hero-text ">
-          <div className="text-center p-[1rem]">
-            <h1 className="text-[3rem] sm:text-[1rem]">
-              Reimagining <span>Public Transport.</span>
+      <div className="min-h-[100vh] w-[100%] bg-[#1a1a1a] text-[#ffffff]">
+        {/* Hero Section */}
+        <div className="pt-[8vh] px-[24px] pb-[60px]">
+          {/* AI Integration Badge */}
+          <div className="flex justify-center mb-[40px]">
+            <div className="flex items-center gap-[8px] bg-[#2a2a2a] px-[16px] py-[8px] rounded-[20px] border border-[#404040]">
+              <div className="w-[12px] h-[12px] bg-[#10b981] rounded-[50%]"></div>
+              <span className="text-[#e5e7eb] text-[14px]">
+                ✨ New: Our AI integration just landed
+              </span>
+            </div>
+          </div>
+
+          {/* Main Hero Content */}
+          <div className="max-w-[1200px] mx-auto text-center">
+            <h1 className="text-[64px] sm:text-[32px] font-[700] leading-[1.1] mb-[24px]">
+              Reimagining Public Transport.
               <br />
-              for the Next <span className="text-[#24ab3f]">Decade.</span>
+              for the Next <span className="text-[#10b981]">Decade.</span>
             </h1>
-            <p className="text-[1.2rem]">
+
+            <p className="text-[#9ca3af] text-[20px] leading-[1.6] max-w-[600px] mx-auto mb-[40px]">
               The future of public transport starts here—real-time GPS tracking,
               AI-powered predictions, and safety-first design, all seamlessly
               woven into one experience.
             </p>
-          </div>
-          <div className="flex items-center justify-center hero-buttons">
-            <StyledWrapper className="m-[1rem]">
-              <button className="cta" onClick={() => navigate("/findbus")}>
-                <span className="span">Check Rides</span>
-                <span className="second">
-                  <svg
-                    width="50px"
-                    height="20px"
-                    viewBox="0 0 66 43"
-                    version="1.1"
-                    xmlns="http://www.w3.org/2000/svg"
-                    xmlnsXlink="http://www.w3.org/1999/xlink"
-                  >
-                    <g
-                      id="arrow"
-                      stroke="none"
-                      strokeWidth={1}
-                      fill="none"
-                      fillRule="evenodd"
-                    >
-                      <path
-                        className="one"
-                        d="M40.1543933,3.89485454 L43.9763149,0.139296592 C44.1708311,-0.0518420739 44.4826329,-0.0518571125 44.6771675,0.139262789 L65.6916134,20.7848311 C66.0855801,21.1718824 66.0911863,21.8050225 65.704135,22.1989893 C65.7000188,22.2031791 65.6958657,22.2073326 65.6916762,22.2114492 L44.677098,42.8607841 C44.4825957,43.0519059 44.1708242,43.0519358 43.9762853,42.8608513 L40.1545186,39.1069479 C39.9575152,38.9134427 39.9546793,38.5968729 40.1481845,38.3998695 C40.1502893,38.3977268 40.1524132,38.395603 40.1545562,38.3934985 L56.9937789,21.8567812 C57.1908028,21.6632968 57.193672,21.3467273 57.0001876,21.1497035 C56.9980647,21.1475418 56.9959223,21.1453995 56.9937605,21.1432767 L40.1545208,4.60825197 C39.9574869,4.41477773 39.9546013,4.09820839 40.1480756,3.90117456 C40.1501626,3.89904911 40.1522686,3.89694235 40.1543933,3.89485454 Z"
-                        fill="#FFFFFF"
-                      />
-                      <path
-                        className="two"
-                        d="M20.1543933,3.89485454 L23.9763149,0.139296592 C24.1708311,-0.0518420739 24.4826329,-0.0518571125 24.6771675,0.139262789 L45.6916134,20.7848311 C46.0855801,21.1718824 46.0911863,21.8050225 45.704135,22.1989893 C45.7000188,22.2031791 45.6958657,22.2073326 45.6916762,22.2114492 L24.677098,42.8607841 C24.4825957,43.0519059 24.1708242,43.0519358 23.9762853,42.8608513 L20.1545186,39.1069479 C19.9575152,38.9134427 19.9546793,38.5968729 20.1481845,38.3998695 C20.1502893,38.3977268 20.1524132,38.395603 20.1545562,38.3934985 L36.9937789,21.8567812 C37.1908028,21.6632968 37.193672,21.3467273 37.0001876,21.1497035 C36.9980647,21.1475418 36.9959223,21.1453995 36.9937605,21.1432767 L20.1545208,4.60825197 C19.9574869,4.41477773 19.9546013,4.09820839 20.1480756,3.90117456 C20.1501626,3.89904911 20.1522686,3.89694235 20.1543933,3.89485454 Z"
-                        fill="#FFFFFF"
-                      />
-                      <path
-                        className="three"
-                        d="M0.154393339,3.89485454 L3.97631488,0.139296592 C4.17083111,-0.0518420739 4.48263286,-0.0518571125 4.67716753,0.139262789 L25.6916134,20.7848311 C26.0855801,21.1718824 26.0911863,21.8050225 25.704135,22.1989893 C25.7000188,22.2031791 25.6958657,22.2073326 25.6916762,22.2114492 L4.67709797,42.8607841 C4.48259567,43.0519059 4.17082418,43.0519358 3.97628526,42.8608513 L0.154518591,39.1069479 C-0.0424848215,38.9134427 -0.0453206733,38.5968729 0.148184538,38.3998695 C0.150289256,38.3977268 0.152413239,38.395603 0.154556228,38.3934985 L16.9937789,21.8567812 C17.1908028,21.6632968 17.193672,21.3467273 17.0001876,21.1497035 C16.9980647,21.1475418 16.9959223,21.1453995 16.9937605,21.1432767 L0.15452076,4.60825197 C-0.0425130651,4.41477773 -0.0453986756,4.09820839 0.148075568,3.90117456 C0.150162624,3.89904911 0.152268631,3.89694235 0.154393339,3.89485454 Z"
-                        fill="#FFFFFF"
-                      />
-                    </g>
-                  </svg>
+
+            {/* CTA Buttons */}
+            <div className="flex items-center justify-center gap-[20px] mb-[40px]">
+              <button
+                onClick={() => navigate("/findbus")}
+                className="group relative bg-[#10b981] hover:bg-[#059669] text-[#ffffff] px-[32px] py-[16px] rounded-[12px] font-[600] text-[16px] transition-all duration-[300ms] hover:scale-[1.02] shadow-[0_8px_24px_rgba(16,185,129,0.3)]"
+              >
+                <span className="relative z-10 flex items-center gap-[8px]">
+                  Check Rides
+                  <ArrowRight className="w-[16px] h-[16px] group-hover:translate-x-[2px] transition-transform" />
                 </span>
               </button>
-            </StyledWrapper>
-            <StyledWrapper className="m-[1rem]">
-              <button className="cta" onClick={() => navigate("/sos")}>
-                <span className="span">Send SOS</span>
-                <span className="second">
-                  <svg
-                    width="50px"
-                    height="20px"
-                    viewBox="0 0 66 43"
-                    version="1.1"
-                    xmlns="http://www.w3.org/2000/svg"
-                    xmlnsXlink="http://www.w3.org/1999/xlink"
-                  >
-                    <g
-                      id="arrow"
-                      stroke="none"
-                      strokeWidth={1}
-                      fill="none"
-                      fillRule="evenodd"
-                    >
-                      <path
-                        className="one"
-                        d="M40.1543933,3.89485454 L43.9763149,0.139296592 C44.1708311,-0.0518420739 44.4826329,-0.0518571125 44.6771675,0.139262789 L65.6916134,20.7848311 C66.0855801,21.1718824 66.0911863,21.8050225 65.704135,22.1989893 C65.7000188,22.2031791 65.6958657,22.2073326 65.6916762,22.2114492 L44.677098,42.8607841 C44.4825957,43.0519059 44.1708242,43.0519358 43.9762853,42.8608513 L40.1545186,39.1069479 C39.9575152,38.9134427 39.9546793,38.5968729 40.1481845,38.3998695 C40.1502893,38.3977268 40.1524132,38.395603 40.1545562,38.3934985 L56.9937789,21.8567812 C57.1908028,21.6632968 57.193672,21.3467273 57.0001876,21.1497035 C56.9980647,21.1475418 56.9959223,21.1453995 56.9937605,21.1432767 L40.1545208,4.60825197 C39.9574869,4.41477773 39.9546013,4.09820839 40.1480756,3.90117456 C40.1501626,3.89904911 40.1522686,3.89694235 40.1543933,3.89485454 Z"
-                        fill="#FFFFFF"
-                      />
-                      <path
-                        className="two"
-                        d="M20.1543933,3.89485454 L23.9763149,0.139296592 C24.1708311,-0.0518420739 24.4826329,-0.0518571125 24.6771675,0.139262789 L45.6916134,20.7848311 C46.0855801,21.1718824 46.0911863,21.8050225 45.704135,22.1989893 C45.7000188,22.2031791 45.6958657,22.2073326 45.6916762,22.2114492 L24.677098,42.8607841 C24.4825957,43.0519059 24.1708242,43.0519358 23.9762853,42.8608513 L20.1545186,39.1069479 C19.9575152,38.9134427 19.9546793,38.5968729 20.1481845,38.3998695 C20.1502893,38.3977268 20.1524132,38.395603 20.1545562,38.3934985 L36.9937789,21.8567812 C37.1908028,21.6632968 37.193672,21.3467273 37.0001876,21.1497035 C36.9980647,21.1475418 36.9959223,21.1453995 36.9937605,21.1432767 L20.1545208,4.60825197 C19.9574869,4.41477773 19.9546013,4.09820839 20.1480756,3.90117456 C20.1501626,3.89904911 20.1522686,3.89694235 20.1543933,3.89485454 Z"
-                        fill="#FFFFFF"
-                      />
-                      <path
-                        className="three"
-                        d="M0.154393339,3.89485454 L3.97631488,0.139296592 C4.17083111,-0.0518420739 4.48263286,-0.0518571125 4.67716753,0.139262789 L25.6916134,20.7848311 C26.0855801,21.1718824 26.0911863,21.8050225 25.704135,22.1989893 C25.7000188,22.2031791 25.6958657,22.2073326 25.6916762,22.2114492 L4.67709797,42.8607841 C4.48259567,43.0519059 4.17082418,43.0519358 3.97628526,42.8608513 L0.154518591,39.1069479 C-0.0424848215,38.9134427 -0.0453206733,38.5968729 0.148184538,38.3998695 C0.150289256,38.3977268 0.152413239,38.395603 0.154556228,38.3934985 L16.9937789,21.8567812 C17.1908028,21.6632968 17.193672,21.3467273 17.0001876,21.1497035 C16.9980647,21.1475418 16.9959223,21.1453995 16.9937605,21.1432767 L0.15452076,4.60825197 C-0.0425130651,4.41477773 -0.0453986756,4.09820839 0.148075568,3.90117456 C0.150162624,3.89904911 0.152268631,3.89694235 0.154393339,3.89485454 Z"
-                        fill="#FFFFFF"
-                      />
-                    </g>
-                  </svg>
+
+              <button
+                onClick={() => navigate("/sos")}
+                className="group relative bg-[#dc2626] hover:bg-[#b91c1c] text-[#ffffff] px-[32px] py-[16px] rounded-[12px] font-[600] text-[16px] transition-all duration-[300ms] hover:scale-[1.02] shadow-[0_8px_24px_rgba(220,38,38,0.3)]"
+              >
+                <span className="relative z-10 flex items-center gap-[8px]">
+                  Send SOS
+                  <ArrowRight className="w-[16px] h-[16px] group-hover:translate-x-[2px] transition-transform" />
                 </span>
               </button>
-            </StyledWrapper>
+            </div>
           </div>
         </div>
-        <div className="h-[60vh] py-[4vh] hero-img-contain rounded-md">
-          <img
-            src="imag1.jpg"
-            alt=""
-            className="w-[25vw]  sm:w-[70vw] hero-img"
-          />
+
+        {/* Why Choose Us Section */}
+        <div className="px-[24px] py-[80px] bg-[#111111]">
+          <div className="max-w-[1200px] mx-auto">
+            {/* Section Header */}
+            <div className="text-center mb-[60px]">
+              <h2 className="text-[48px] sm:text-[28px] font-[700] mb-[16px]">
+                Key <span className="text-[#10b981]">Benefits</span> of Using
+                GoLocal
+              </h2>
+
+              <p className="text-[#9ca3af] text-[18px] max-w-[600px] mx-auto leading-[1.6]">
+                From starting in uncertainty to traveling with confidence.
+                <br />
+                We're making public transport reliable, safe, and accessible for
+                everyone.
+              </p>
+            </div>
+
+            {/* Benefits Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-[32px]">
+              {benefits.map((benefit, index) => (
+                <div key={index} className="group">
+                  <div className="bg-[#1e1e1e] hover:bg-[#252525] p-[24px] rounded-[16px] border border-[#333333] hover:border-[#10b981] transition-all duration-[300ms] hover:scale-[1.02]">
+                    <div className="w-[48px] h-[48px] bg-[#10b981] bg-opacity-[0.1] rounded-[12px] flex items-center justify-center mb-[16px]">
+                      <benefit.icon className="w-[24px] h-[24px] text-[#10b981]" />
+                    </div>
+                    <h3 className="text-[#ffffff] text-[18px] font-[600] mb-[8px]">
+                      {benefit.title}
+                    </h3>
+                    <p className="text-[#9ca3af] text-[14px] leading-[1.5]">
+                      {benefit.description}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 

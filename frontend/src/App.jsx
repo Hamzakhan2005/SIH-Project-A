@@ -4,6 +4,7 @@ import Navbar from "./components/Navbar";
 import SignIn from "./components/SignIn";
 import { Routes, Route } from "react-router-dom";
 import Sos from "./components/Sos.jsx";
+import AdminDashboard from "./components/Dashboard.jsx";
 import Assistant from "./components/Assistant.jsx";
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
         <Route path="/language" element={<SignIn />} />
         <Route path="/sos" element={<Sos />} />
         <Route path="/voice" element={<Assistant />} />
+        <Route path="/dashboard" element={<AdminDashboard />} />
       </Routes>
     </>
   );

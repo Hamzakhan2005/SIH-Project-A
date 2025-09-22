@@ -7,9 +7,9 @@ import Button from "@mui/material/Button";
 import Tooltip, { tooltipClasses } from "@mui/material/Tooltip";
 import Stack from "@mui/material/Stack";
 import styled from "styled-components";
-import "./Navbar.css"
-import { Languages } from 'lucide-react';
-import {useState} from "react"
+import "./Navbar.css";
+import { Languages } from "lucide-react";
+import { useState } from "react";
 
 const BootstrapTooltip = muiStyled(({ className, ...props }) => (
   <Tooltip {...props} arrow classes={{ popper: className }} />
@@ -31,7 +31,7 @@ const Navbar = () => {
         className="p-[2vh] flex h-[8vh] items-center navbar"
         style={{
           background:
-            "linear-gradient(to right, green 0%, white 50%, orange 100%)",
+            "linear-gradient(to right, #1f2937 0%, #374151 50%, #1f2937 100%)",
         }}
       >
         <div className="w-[25%] flex justify-center title">
@@ -83,34 +83,38 @@ const Navbar = () => {
             >
               Sign In
             </Button>
-            <Button onClick={() => navigate("/language")}><Languages/></Button>
+            <Button onClick={() => navigate("/language")}>
+              <Languages />
+            </Button>
           </Stack>
         </div>
         <div className="hamburger" onClick={() => setIsOpen(true)}>
-        <MenuIcon fontSize="large" />
-      </div>
-      {isOpen && (
-        <div className="sidebar">
-          <div className="close-btn" onClick={() => setIsOpen(false)}>
-            <CloseIcon fontSize="large" />
-          </div>
-          <div className="sidebar-links">
-            <Button onClick={() => navigate("/features")}>Features</Button>
-            <Button onClick={() => navigate("/benefits")}>Benefits</Button>
-            <Button onClick={() => navigate("/services")}>Services</Button>
-            <Button onClick={() => navigate("/faqs")}>FAQs</Button>
-            <Button
-              variant="contained"
-              color="success"
-              onClick={() => navigate("/signin")}
-            >
-              Sign In
-            </Button>
-            <Button onClick={() => navigate("/language")}><Languages/></Button>
-          </div>
+          <MenuIcon fontSize="large" />
         </div>
-      )}
-    </div>
+        {isOpen && (
+          <div className="sidebar">
+            <div className="close-btn" onClick={() => setIsOpen(false)}>
+              <CloseIcon fontSize="large" />
+            </div>
+            <div className="sidebar-links">
+              <Button onClick={() => navigate("/features")}>Features</Button>
+              <Button onClick={() => navigate("/benefits")}>Benefits</Button>
+              <Button onClick={() => navigate("/services")}>Services</Button>
+              <Button onClick={() => navigate("/faqs")}>FAQs</Button>
+              <Button
+                variant="contained"
+                color="success"
+                onClick={() => navigate("/signin")}
+              >
+                Sign In
+              </Button>
+              <Button onClick={() => navigate("/language")}>
+                <Languages />
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
     </>
   );
 };

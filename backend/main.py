@@ -21,9 +21,9 @@ cur_bg.execute("PRAGMA journal_mode=WAL;")
 db_lock = threading.Lock()
 app=FastAPI()
 origins = [
-    # "http://localhost:5173",
-    # "http://127.0.0.1:5173"
-    "https://sih-project-a.vercel.app"
+    "http://localhost:5173",
+    "http://127.0.0.1:5173"
+    # "https://sih-project-a.vercel.app"
 ]
 
 
@@ -240,61 +240,55 @@ def stop_schedule(stop_id: int):
     now = datetime.now()
     results = []
 
-    # Routes passing through this stop
-    route_rows = db_query("SELECT DISTINCT route_id FROM route_stops WHERE stop_id=?", (stop_id,))
+    # Get route IDs that pass through this stop
+    route_rows = db_query("SELECT route_id, stop_order FROM route_stops WHERE stop_id=?", (stop_id,))
     if not route_rows:
         return {"stop_id": stop_id, "arrivals": []}
 
-    route_ids = [r[0] for r in route_rows]
-
-    # Stop coordinates
-    stop_row = db_query("SELECT id, lat, lng FROM stops WHERE id=?", (stop_id,))
-    if not stop_row:
-        raise HTTPException(404, "Stop not found")
-    _, stop_lat, stop_lng = stop_row[0]
-
-    for route_id in route_ids:
+    for route_id, stop_order in route_rows:
+        # Active buses on this route
         buses = db_query("SELECT id, current_lat, current_lng FROM buses WHERE route_id=?", (route_id,))
+        stop_row = db_query("SELECT lat, lng FROM stops WHERE id=?", (stop_id,))
+        stop_lat, stop_lng = stop_row[0]
+
         for bus_id, bus_lat, bus_lng in buses:
-
-            # Use straight-line distance for ETA
+            # ETA calculation (real-time)
             road_distance_km = haversine_km(bus_lat, bus_lng, stop_lat, stop_lng)
-
-            # travel time
-            multiplier = time_of_day_multiplier(now)
-            base_speed_kmph = 25.0
-            effective_speed = base_speed_kmph * multiplier
-            travel_minutes = (road_distance_km / effective_speed) * 60
-
+            travel_minutes = (road_distance_km / 25.0) * 60
             eta_time = (now + timedelta(minutes=travel_minutes)).strftime("%H:%M:%S")
 
             results.append({
                 "bus_id": bus_id,
                 "route_id": route_id,
                 "stop_id": stop_id,
-                "eta_minutes": round(travel_minutes, 2),
+                "eta_minutes": round(travel_minutes, 1),
                 "eta_time": eta_time,
-                "distance_km": round(road_distance_km, 2),
+                "scheduled_time": None,
                 "fare_inr": 10
             })
 
-        # Optional: include scheduled departures
-        sched_rows = db_query("SELECT departure_time FROM schedules WHERE route_id=? ORDER BY departure_time ASC", (route_id,))
+        # Add scheduled arrivals (approx from stop order)
+        sched_rows = db_query("SELECT departure_time FROM schedules WHERE route_id=?", (route_id,))
         for (dep_time_str,) in sched_rows:
+            dep_dt = datetime.strptime(dep_time_str, "%H:%M")
+            # assume 5 min per stop travel
+            arr_dt = dep_dt + timedelta(minutes=5 * (stop_order - 1))
             results.append({
                 "bus_id": None,
                 "route_id": route_id,
                 "stop_id": stop_id,
-                "scheduled_time": dep_time_str,
                 "eta_minutes": None,
                 "eta_time": None,
-                "distance_km": None,
+                "scheduled_time": arr_dt.strftime("%H:%M"),
                 "fare_inr": 10
             })
 
-    # Sort soonest ETA first
-    results.sort(key=lambda x: x["eta_minutes"] if x["eta_minutes"] is not None else 99999)
+    results.sort(key=lambda x: (
+        x["eta_minutes"] if x["eta_minutes"] is not None else 99999,
+        x["scheduled_time"] if x["scheduled_time"] is not None else "99:99"
+    ))
     return {"stop_id": stop_id, "arrivals": results}
+
 
 
 
