@@ -79,7 +79,7 @@ const Navbar = () => {
             <Button
               variant="contained"
               color="success"
-              onClick={() => navigate("/signin")}
+              onClick={() => navigate("/auth")}
             >
               Sign In
             </Button>
