@@ -51,25 +51,53 @@ const Navbar = () => {
         <div className="w-[50%] flex justify-center nav-links">
           <BootstrapTooltip
             title="Features"
-            style={{ color: "black", fontSize: "1.4rem" }}
+            style={{
+              color: "white",
+              fontSize: "1.3rem",
+              fontWeight: "600",
+              transition: "color 0.3s",
+            }}
+            onMouseOver={(e) => (e.target.style.color = "#10B981")}
+            onMouseOut={(e) => (e.target.style.color = "white")}
           >
             <Button className="text-[2rem]">Features</Button>
           </BootstrapTooltip>
           <BootstrapTooltip
             title="Benefits"
-            style={{ color: "black", fontSize: "1.4rem" }}
+            style={{
+              color: "white",
+              fontSize: "1.3rem",
+              fontWeight: "600",
+              transition: "color 0.3s",
+            }}
+            onMouseOver={(e) => (e.target.style.color = "#10B981")}
+            onMouseOut={(e) => (e.target.style.color = "white")}
           >
             <Button>Benefits</Button>
           </BootstrapTooltip>
           <BootstrapTooltip
             title="Services"
-            style={{ color: "black", fontSize: "1.3rem" }}
+            style={{
+              color: "white",
+              fontSize: "1.3rem",
+              fontWeight: "600",
+              transition: "color 0.3s",
+            }}
+            onMouseOver={(e) => (e.target.style.color = "#10B981")}
+            onMouseOut={(e) => (e.target.style.color = "white")}
           >
             <Button>Services</Button>
           </BootstrapTooltip>
           <BootstrapTooltip
             title="FAQs"
-            style={{ color: "black", fontSize: "1.3rem" }}
+            style={{
+              color: "white",
+              fontSize: "1.3rem",
+              fontWeight: "600",
+              transition: "color 0.3s",
+            }}
+            onMouseOver={(e) => (e.target.style.color = "#10B981")}
+            onMouseOut={(e) => (e.target.style.color = "white")}
           >
             <Button>FAQs</Button>
           </BootstrapTooltip>

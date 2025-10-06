@@ -6,7 +6,9 @@
 
 body {
   /* background: linear-gradient(135deg, #0c0d0f 0%, #111416 50%, #1a1e1b 100%); */
+
   margin: 0;
   padding: 0;
-  font-family: "Work Sans", sans-serif;
+  font-family: "Merriweather", serif;
+  font-optical-sizing: auto;
 }

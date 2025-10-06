@@ -62,7 +62,7 @@ export default function ChatAssistantPage() {
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="Ask anything you need"
-                className="w-[100%] pl-[20px] pr-[100px] py-[16px] bg-[#4b5563] text-[#ffffff] placeholder-[#9ca3af] rounded-[50px] focus:outline-none focus:ring-[2px] focus:ring-[#10b981] text-[16px] border border-[#6b7280]"
+                className="w-[80%] ml-[0.5rem] pl-[20px] pr-[100px] py-[16px] bg-[#4b5563] text-[#ffffff] placeholder-[#9ca3af] rounded-[50px] focus:outline-none focus:ring-[2px] focus:ring-[#10b981] text-[16px] border border-[#6b7280]"
                 onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
               />
               <div className="absolute right-[10px] top-[50%] transform -translate-y-[50%] flex items-center gap-[8px]">
